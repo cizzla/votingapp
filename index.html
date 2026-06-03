@@ -203,7 +203,6 @@ button:hover {
     box-shadow: 0 2px 10px rgba(0,0,0,.1);
 }
 
-/* New Inline Form Card Styling */
 .admin-action-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -249,6 +248,23 @@ button:hover {
     border: 1px solid #ccc;
 }
 
+/* Custom styling for sleek file upload action buttons */
+.file-upload-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+    width: 100%;
+}
+
+.file-upload-wrapper input[type=file] {
+    font-size: 100px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
 footer {
     margin-top: 50px;
     padding: 20px;
@@ -268,6 +284,7 @@ footer {
 
 <div class="container">
 
+    <!-- VIEW: STUDENT LOGIN -->
     <div id="view-login" class="page-view active">
         <div class="auth-wrapper">
             <div class="card">
@@ -286,6 +303,7 @@ footer {
         </div>
     </div>
 
+    <!-- VIEW: GENERAL PUBLIC REGISTRATION -->
     <div id="view-register" class="page-view">
         <div class="auth-wrapper">
             <div class="card">
@@ -305,6 +323,7 @@ footer {
         </div>
     </div>
 
+    <!-- VIEW: ADMIN PORTAL LOGIN INTERFACE -->
     <div id="view-admin-login" class="page-view">
         <div class="auth-wrapper">
             <div class="card">
@@ -321,6 +340,7 @@ footer {
         </div>
     </div>
 
+    <!-- VIEW: VOTER BALLOT ROOM DASHBOARD -->
     <div id="view-dashboard" class="page-view">
         <div class="user-welcome">
             <h3>Logged in as: <span id="displayStudentName" style="color:#003366;">Student</span></h3>
@@ -352,10 +372,12 @@ footer {
         </div>
     </div>
 
+    <!-- VIEW: SYSTEM ADMINISTRATION CONTROL PANEL -->
     <div id="view-admin-dashboard" class="page-view">
         <h2>System Administration Control Panel</h2>
         
         <div class="admin-grid">
+            <!-- COLUMN 1: LIVE TALLIES -->
             <div class="results-box">
                 <h3>Live Election Results & Candidates</h3>
                 
@@ -364,7 +386,11 @@ footer {
                         <span>Candidate A Tally:</span>
                         <strong class="vote-count" id="countA">0 votes</strong>
                     </div>
-                    <button style="padding: 5px 10px; font-size:12px; background: #22c55e;" onclick="applyDirectCandidatePhotoUrl('Candidate A')">Change Candidate A Photo</button>
+                    <!-- Upgraded to native direct device file upload selection -->
+                    <div class="file-upload-wrapper">
+                        <button style="padding: 5px 10px; font-size:12px; background: #22c55e;">Upload New Candidate A Photo</button>
+                        <input type="file" accept="image/*" onchange="triggerDirectCandidateUpload(this, 'Candidate A')">
+                    </div>
                 </div>
                 
                 <div class="result-item">
@@ -372,7 +398,10 @@ footer {
                         <span>Candidate B Tally:</span>
                         <strong class="vote-count" id="countB">0 votes</strong>
                     </div>
-                    <button style="padding: 5px 10px; font-size:12px; background: #22c55e;" onclick="applyDirectCandidatePhotoUrl('Candidate B')">Change Candidate B Photo</button>
+                    <div class="file-upload-wrapper">
+                        <button style="padding: 5px 10px; font-size:12px; background: #22c55e;">Upload New Candidate B Photo</button>
+                        <input type="file" accept="image/*" onchange="triggerDirectCandidateUpload(this, 'Candidate B')">
+                    </div>
                 </div>
                 
                 <div class="result-item">
@@ -380,10 +409,14 @@ footer {
                         <span>Candidate C Tally:</span>
                         <strong class="vote-count" id="countC">0 votes</strong>
                     </div>
-                    <button style="padding: 5px 10px; font-size:12px; background: #22c55e;" onclick="applyDirectCandidatePhotoUrl('Candidate C')">Change Candidate C Photo</button>
+                    <div class="file-upload-wrapper">
+                        <button style="padding: 5px 10px; font-size:12px; background: #22c55e;">Upload New Candidate C Photo</button>
+                        <input type="file" accept="image/*" onchange="triggerDirectCandidateUpload(this, 'Candidate C')">
+                    </div>
                 </div>
             </div>
 
+            <!-- COLUMN 2: REGISTRY MANAGEMENT -->
             <div class="voter-management">
                 <h3>Voter Registry Editor</h3>
                 <p style="font-size: 13px; color:#666; margin-bottom: 15px;">Modify registered student information and add new election participants directly below.</p>
@@ -494,14 +527,13 @@ function handleStudentRegistration() {
     .catch(err => console.error("Communication layer interruption:", err));
 }
 
-// NEW HANDLER: Admin Direct Voter Upload (No structural backend route rewrites needed)
 function handleAdminDirectVoterUpload() {
     const name = document.getElementById('adminInsertName').value.trim();
     const regNum = document.getElementById('adminInsertReg').value.trim();
     const password = document.getElementById('adminInsertPass').value;
 
     if(!name || !regNum || !password) {
-        return alert("Error: Cannot create an account with empty fields. Provide Name, Reg Number, and Password.");
+        return alert("Error: Provide Name, Reg Number, and Password.");
     }
 
     fetch("/api/register", {
@@ -512,15 +544,13 @@ function handleAdminDirectVoterUpload() {
     .then(res => res.json())
     .then(data => {
         if(data.success) {
-            alert(`Success: Profile for ${name} has been securely uploaded to the voter registry!`);
-            // Clear input fields immediately
+            alert(`Success: Profile for ${name} has been uploaded to the voter registry!`);
             document.getElementById('adminInsertName').value = "";
             document.getElementById('adminInsertReg').value = "";
             document.getElementById('adminInsertPass').value = "";
-            // Reload table view to instantly verify listing inclusion
             fetchAdminDashboardData();
         } else {
-            alert("Upload Core Refusal: " + data.message);
+            alert("Upload core failure: " + data.message);
         }
     })
     .catch(err => alert("Registry interaction fault: " + err.message));
@@ -637,7 +667,11 @@ function fetchAdminDashboardData() {
                     ${voter.has_voted ? 'Voted' : 'Pending'}
                 </td>
                 <td>
-                    <button style="padding: 5px 10px; font-size:12px; width:auto;" onclick="applyDirectVoterPhotoUrl(${voter.id}, '${voter.fullname}')">Set Photo URL</button>
+                    <!-- Refactored Table action cell to invoke direct browser image uploads -->
+                    <div class="file-upload-wrapper">
+                        <button style="padding: 5px 10px; font-size:12px; width:auto;">Upload Photo</button>
+                        <input type="file" accept="image/*" onchange="triggerDirectVoterUpload(this, ${voter.id}, '${voter.fullname}')">
+                    </div>
                 </td>
             `;
             tbody.appendChild(row);
@@ -645,33 +679,44 @@ function fetchAdminDashboardData() {
     });
 }
 
-function applyDirectVoterPhotoUrl(studentId, studentName) {
-    const photoData = prompt(`Enter the direct, absolute image address URL for ${studentName}:`);
-    if (photoData === null || photoData.trim() === "") return;
+// UPGRADED HANDLER: Directly converts selected local file into a string format and posts to backend instantly
+function triggerDirectVoterUpload(inputElement, studentId, studentName) {
+    if (!inputElement.files || !inputElement.files[0]) return;
 
-    fetch("/api/admin/update-photo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId, photoData: photoData.trim() })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if(data.success) {
-            document.getElementById(`avatar-${studentId}`).src = photoData.trim();
-            alert(`Voter profile image for ${studentName} successfully updated.`);
-        } else {
-            alert("Failure executing server payload URL assignment.");
-        }
-    })
-    .catch(err => console.error("Network communication fault during picture updates:", err));
+    const fileReader = new FileReader();
+    fileReader.onload = function(e) {
+        const base64ImageString = e.target.result; // Full binary data read as an executable payload string
+
+        fetch("/api/admin/update-photo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ studentId, photoData: base64ImageString })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                document.getElementById(`avatar-${studentId}`).src = base64ImageString;
+                alert(`Profile picture for ${studentName} has been successfully updated.`);
+            } else {
+                alert("Backend storage failed to accept image string payload.");
+            }
+        })
+        .catch(err => console.error("Network communication fault during picture updates:", err));
+    };
+    fileReader.readAsDataURL(inputElement.files[0]);
 }
 
-function applyDirectCandidatePhotoUrl(candidateName) {
-    const newUrl = prompt(`Enter the direct image address URL link for ${candidateName}:`, memoryCandidatePhotos[candidateName]);
-    if (newUrl === null || newUrl.trim() === "") return;
+// UPGRADED HANDLER: Updates local browser memory mapping state using direct file conversions
+function triggerDirectCandidateUpload(inputElement, candidateName) {
+    if (!inputElement.files || !inputElement.files[0]) return;
 
-    memoryCandidatePhotos[candidateName] = newUrl.trim();
-    alert(`Image path for ${candidateName} has been successfully assigned to browser cache memory state.`);
+    const fileReader = new FileReader();
+    fileReader.onload = function(e) {
+        const base64ImageString = e.target.result;
+        memoryCandidatePhotos[candidateName] = base64ImageString;
+        alert(`Local application cache memory updated for ${candidateName}.`);
+    };
+    fileReader.readAsDataURL(inputElement.files[0]);
 }
 
 function logout() {
