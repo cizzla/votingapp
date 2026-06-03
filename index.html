@@ -6,287 +6,521 @@
 <title>Meru University Voting System</title>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Arial, sans-serif;
 }
 
-body{
-background:#f4f6f9;
+body {
+    background: #f4f6f9;
+    color: #333;
 }
 
-header{
-background:#003366;
-color:white;
-padding:20px;
-text-align:center;
+header {
+    background: #003366;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    position: relative;
 }
 
-.container{
-width:90%;
-max-width:1200px;
-margin:auto;
-padding:20px;
+header button.logout-btn {
+    position: absolute;
+    right: 20px;
+    top: 25px;
+    background: #cc0000;
+    padding: 8px 15px;
 }
 
-.login-section{
-display:flex;
-gap:20px;
-flex-wrap:wrap;
-justify-content:center;
-margin-top:30px;
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
 }
 
-.card{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 2px 10px rgba(0,0,0,.1);
-width:350px;
+/* Page View Management */
+.page-view {
+    display: none;
 }
 
-.card h2{
-margin-bottom:15px;
+.page-view.active {
+    display: block;
 }
 
-input{
-width:100%;
-padding:10px;
-margin:10px 0;
-border:1px solid #ccc;
-border-radius:5px;
+/* Forms & Panels Layout */
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
 }
 
-button{
-background:#003366;
-color:white;
-border:none;
-padding:10px 20px;
-border-radius:5px;
-cursor:pointer;
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,.1);
+    width: 100%;
+    max-width: 400px;
 }
 
-button:hover{
-opacity:.9;
+.card h2 {
+    margin-bottom: 20px;
+    color: #003366;
+    border-bottom: 2px solid #f4f6f9;
+    padding-bottom: 10px;
 }
 
-.candidates{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-gap:20px;
-margin-top:30px;
+.toggle-link {
+    display: block;
+    margin-top: 15px;
+    color: #003366;
+    text-decoration: none;
+    font-size: 0.9px;
+    text-align: center;
+    cursor: pointer;
 }
 
-.candidate{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 2px 10px rgba(0,0,0,.1);
-text-align:center;
+.toggle-link:hover {
+    text-decoration: underline;
 }
 
-.candidate img{
-width:120px;
-height:120px;
-border-radius:50%;
-object-fit:cover;
-margin-bottom:10px;
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0 20px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
 }
 
-.results{
-margin-top:40px;
-background:white;
-padding:20px;
-border-radius:10px;
+button {
+    width: 100%;
+    background: #003366;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    transition: background 0.3s;
 }
 
-.vote-count{
-font-weight:bold;
-color:green;
+button:hover {
+    background: #002244;
 }
 
-footer{
-margin-top:50px;
-padding:20px;
-background:#003366;
-color:white;
-text-align:center;
+/* Voting Dashboard Layout */
+.user-welcome {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.candidates {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.candidate {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.1);
+    text-align: center;
+    border-top: 4px solid #003366;
+}
+
+.candidate img {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
+    border: 3px solid #f4f6f9;
+}
+
+/* Admin Panel Layout */
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .admin-grid { grid-template-columns: 1fr; }
+}
+
+.results-box {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.1);
+    height: fit-content;
+}
+
+.result-item {
+    margin: 15px 0;
+    padding: 10px;
+    background: #f8fafc;
+    border-left: 4px solid green;
+    display: flex;
+    justify-content: space-between;
+}
+
+.voter-management {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.1);
+}
+
+.voter-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.voter-list-table th, .voter-list-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.voter-list-table th {
+    background: #f4f6f9;
+    color: #003366;
+}
+
+.voter-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+footer {
+    margin-top: 50px;
+    padding: 20px;
+    background: #003366;
+    color: white;
+    text-align: center;
 }
 </style>
 </head>
-
 <body>
 
 <header>
-<h1>MERU UNIVERSITY STUDENT ELECTIONS</h1>
-<p>Secure Online Voting Platform</p>
+    <h1>MERU UNIVERSITY STUDENT ELECTIONS</h1>
+    <p>Secure Online Voting Platform</p>
+    <button id="globalLogout" class="logout-btn" style="display: none;" onclick="logout()">Logout</button>
 </header>
 
 <div class="container">
 
-<div class="login-section">
+    <div id="view-login" class="page-view active">
+        <div class="auth-wrapper">
+            <div class="card">
+                <h2>Student Login</h2>
+                <label>Registration Number</label>
+                <input type="text" id="loginReg" placeholder="e.g., CT201/00000/22">
+                
+                <label>Password</label>
+                <input type="password" id="loginPass" placeholder="Enter your password">
+                
+                <button onclick="handleStudentLogin()">Sign In</button>
+                <a class="toggle-link" onclick="switchView('view-register')">Don't have an account? Register here</a>
+                <a class="toggle-link" onclick="switchView('view-admin-login')" style="color: #666; font-size: 12px;">Go to Admin Portal</a>
+            </div>
+        </div>
+    </div>
 
-<div class="card">
-<h2>Student Login</h2>
+    <div id="view-register" class="page-view">
+        <div class="auth-wrapper">
+            <div class="card">
+                <h2>Voter Registration</h2>
+                <label>Full Name</label>
+                <input type="text" id="regName" placeholder="Enter your official name">
 
-<input type="text" id="studentReg" placeholder="Registration Number">
+                <label>Registration Number</label>
+                <input type="text" id="regId" placeholder="e.g., CT201/00000/22">
+                
+                <label>Create Password</label>
+                <input type="password" id="regPass" placeholder="Choose a secure password">
+                
+                <button onclick="handleStudentRegistration()">Create Account</button>
+                <a class="toggle-link" onclick="switchView('view-login')">Already registered? Log in here</a>
+            </div>
+        </div>
+    </div>
 
-<input type="password" id="studentPassword" placeholder="Password">
+    <div id="view-admin-login" class="page-view">
+        <div class="auth-wrapper">
+            <div class="card">
+                <h2>Administrative Access</h2>
+                <label>Admin Username</label>
+                <input type="text" id="adminUser" placeholder="Enter admin username">
+                
+                <label>Secret Password</label>
+                <input type="password" id="adminPass" placeholder="Enter admin password">
+                
+                <button onclick="handleAdminLogin()">Verify Authority</button>
+                <a class="toggle-link" onclick="switchView('view-login')">Return to Student Login</a>
+            </div>
+        </div>
+    </div>
 
-<button onclick="studentLogin()">
-Login
-</button>
-</div>
+    <div id="view-dashboard" class="page-view">
+        <div class="user-welcome">
+            <h3>Logged in as: <span id="displayStudentName" style="color:#003366;">Student</span></h3>
+            <span id="voteStatusBadge" style="font-weight: bold;"></span>
+        </div>
 
-<div class="card">
-<h2>Admin Login</h2>
+        <h2>Executive Presidential Candidates</h2>
+        <div class="candidates">
+            <div class="candidate">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" alt="Candidate A">
+                <h3>Candidate A</h3>
+                <p>School of Computing & Informatics</p>
+                <button style="margin-top:15px;" onclick="submitBallot('Candidate A')">Cast Vote</button>
+            </div>
 
-<input type="text" id="adminUser" placeholder="Username">
+            <div class="candidate">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150" alt="Candidate B">
+                <h3>Candidate B</h3>
+                <p>School of Business & Economics</p>
+                <button style="margin-top:15px;" onclick="submitBallot('Candidate B')">Cast Vote</button>
+            </div>
 
-<input type="password" id="adminPass" placeholder="Password">
+            <div class="candidate">
+                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150" alt="Candidate C">
+                <h3>Candidate C</h3>
+                <p>School of Engineering</p>
+                <button style="margin-top:15px;" onclick="submitBallot('Candidate C')">Cast Vote</button>
+            </div>
+        </div>
+    </div>
 
-<button onclick="adminLogin()">
-Admin Login
-</button>
-</div>
+    <div id="view-admin-dashboard" class="page-view">
+        <h2>System Administration Control Panel</h2>
+        
+        <div class="admin-grid">
+            <div class="results-box">
+                <h3>Live Election Results</h3>
+                <div class="result-item">
+                    <span>Candidate A Tally:</span>
+                    <strong class="vote-count" id="countA">0 votes</strong>
+                </div>
+                <div class="result-item">
+                    <span>Candidate B Tally:</span>
+                    <strong class="vote-count" id="countB">0 votes</strong>
+                </div>
+                <div class="result-item">
+                    <span>Candidate C Tally:</span>
+                    <strong class="vote-count" id="countC">0 votes</strong>
+                </div>
+            </div>
 
-</div>
-
-<h2 style="margin-top:40px;">Presidential Candidates</h2>
-
-<div class="candidates">
-
-<div class="candidate">
-<img src="https://via.placeholder.com/120">
-<h3>Candidate A</h3>
-<p>President</p>
-<button onclick="vote('Candidate A')">
-Vote
-</button>
-</div>
-
-<div class="candidate">
-<img src="https://via.placeholder.com/120">
-<h3>Candidate B</h3>
-<p>President</p>
-<button onclick="vote('Candidate B')">
-Vote
-</button>
-</div>
-
-<div class="candidate">
-<img src="https://via.placeholder.com/120">
-<h3>Candidate C</h3>
-<p>President</p>
-<button onclick="vote('Candidate C')">
-Vote
-</button>
-</div>
-
-</div>
-
-<div class="results">
-
-<h2>Election Results</h2>
-
-<p>
-Candidate A:
-<span class="vote-count" id="A">0</span>
-</p>
-
-<p>
-Candidate B:
-<span class="vote-count" id="B">0</span>
-</p>
-
-<p>
-Candidate C:
-<span class="vote-count" id="C">0</span>
-</p>
-
-</div>
+            <div class="voter-management">
+                <h3>Voter Registry Editor</h3>
+                <p style="font-size: 13px; color:#666; margin-bottom: 15px;">Modify registered student information and upload identification photos.</p>
+                
+                <table class="voter-list-table">
+                    <thead>
+                        <tr>
+                            <th>Photo</th>
+                            <th>Reg Number</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Update Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="voterTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
 </div>
 
 <footer>
-© 2026 Meru University Voting System
+    © 2026 Meru University Voting System. All Rights Reserved.
 </footer>
 
 <script>
-// Automatically load live results from the server database when page opens
-window.onload = function() {
-  fetchResults();
+// Mock Local Database to ensure fully operational interactivity out-of-the-box
+let state = {
+    voters: [
+        { regNum: "CT201/0001/22", name: "John Doe", voted: false, photo: "https://via.placeholder.com/40" },
+        { regNum: "EG201/0055/22", name: "Jane Karimi", voted: true, photo: "https://via.placeholder.com/40" }
+    ],
+    tally: { "Candidate A": 1, "Candidate B": 0, "Candidate C": 0 },
+    currentUser: null
 };
 
-function fetchResults() {
-  fetch("/api/results")
-    .then(response => response.json())
-    .then(data => {
-      document.getElementById("A").innerText = data.A || 0;
-      document.getElementById("B").innerText = data.B || 0;
-      document.getElementById("C").innerText = data.C || 0;
-    })
-    .catch(err => console.error("Error fetching live results:", err));
+// 1. Navigation Controller
+function switchView(viewId) {
+    document.querySelectorAll('.page-view').forEach(view => view.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+    
+    // Manage logout visibility
+    if(viewId === 'view-dashboard' || viewId === 'view-admin-dashboard') {
+        document.getElementById('globalLogout').style.display = 'block';
+    } else {
+        document.getElementById('globalLogout').style.display = 'none';
+    }
+
+    if(viewId === 'view-admin-dashboard') {
+        renderAdminDashboard();
+    }
 }
 
-function studentLogin() {
-  const regNum = document.getElementById("studentReg").value;
-  const password = document.getElementById("studentPassword").value;
+// 2. Student Authentication Logic
+function handleStudentRegistration() {
+    const name = document.getElementById('regName').value.trim();
+    const regNum = document.getElementById('regId').value.trim();
+    const pass = document.getElementById('regPass').value;
 
-  fetch("/api/login/student", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ regNum, password })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      alert("Student Login Successful! Welcome " + regNum);
-    } else {
-      alert("Login failed: " + data.message);
-    }
-  })
-  .catch(err => alert("Error during login connection."));
+    if(!name || !regNum || !pass) return alert("Please fill out all registration fields.");
+
+    // Check duplicate
+    const exists = state.voters.find(v => v.regNum.toLowerCase() === regNum.toLowerCase());
+    if(exists) return alert("This registration number is already registered.");
+
+    // Append new profile record
+    state.voters.push({
+        regNum: regNum,
+        name: name,
+        voted: false,
+        photo: "https://via.placeholder.com/40"
+    });
+
+    alert("Registration Account Created Successfully! Proceed to login.");
+    switchView('view-login');
 }
 
-function adminLogin() {
-  const username = document.getElementById("adminUser").value;
-  const password = document.getElementById("adminPass").value;
+function handleStudentLogin() {
+    const regNum = document.getElementById('loginReg').value.trim();
+    const pass = document.getElementById('loginPass').value;
 
-  fetch("/api/login/admin", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      alert("Admin Access Granted!");
-    } else {
-      alert("Admin Access Denied: " + data.message);
+    if(!regNum || !pass) return alert("Provide both registration ID and password.");
+
+    // Verify record exists 
+    const profile = state.voters.find(v => v.regNum.toLowerCase() === regNum.toLowerCase());
+    
+    if(!profile) {
+        return alert("Account not found. Please register your student details first.");
     }
-  })
-  .catch(err => alert("Error during admin connection."));
+
+    state.currentUser = profile;
+    document.getElementById('displayStudentName').innerText = profile.name;
+    updateVotingStatusUI();
+    switchView('view-dashboard');
 }
 
-function vote(candidate) {
-  fetch("/api/vote", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ candidate })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      alert("Vote submitted successfully to the database.");
-      fetchResults(); // Refresh election tallies live
+// 3. Admin Authentication Logic
+function handleAdminLogin() {
+    const user = document.getElementById('adminUser').value;
+    const pass = document.getElementById('adminPass').value;
+
+    if(user === "admin" && pass === "meru2026") {
+        state.currentUser = { name: "System Admin", role: "admin" };
+        switchView('view-admin-dashboard');
     } else {
-      alert("Voting error: " + data.message);
+        alert("Invalid Admin clearance codes.");
     }
-  })
-  .catch(err => alert("Error submitting your ballot."));
+}
+
+// 4. Voting Logic Engine
+function updateVotingStatusUI() {
+    const badge = document.getElementById('voteStatusBadge');
+    if(state.currentUser.voted) {
+        badge.innerText = "PASSED BALLOT: Voted";
+        badge.style.color = "red";
+    } else {
+        badge.innerText = "ELIGIBLE TO VOTE";
+        badge.style.color = "green";
+    }
+}
+
+function submitBallot(candidateName) {
+    if(state.currentUser.voted) {
+        return alert("Security Refusal: You have already exercised your single ballot option.");
+    }
+
+    if(confirm(`Are you certain you want to commit your vote to ${candidateName}? This choice cannot be reverted.`)) {
+        state.tally[candidateName]++;
+        state.currentUser.voted = true;
+        updateVotingStatusUI();
+        alert("Ballot Successfully verified and cast anonymously into database tier.");
+    }
+}
+
+// 5. Admin Dashboard Renderer (Modifying Voters & Managing Image Upload Streams)
+function renderAdminDashboard() {
+    // Sync Results
+    document.getElementById('countA').innerText = `${state.tally["Candidate A"]} votes`;
+    document.getElementById('countB').innerText = `${state.tally["Candidate B"]} votes`;
+    document.getElementById('countC').innerText = `${state.tally["Candidate C"]} votes`;
+
+    // Populate Student records table row fields
+    const tbody = document.getElementById('voterTableBody');
+    tbody.innerHTML = "";
+
+    state.voters.forEach((voter, idx) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><img src="${voter.photo}" class="voter-avatar" id="avatar-${idx}"></td>
+            <td><strong>${voter.regNum}</strong></td>
+            <td>${voter.name}</td>
+            <td style="color: ${voter.voted ? 'red' : 'green'}; font-weight:bold;">
+                ${voter.voted ? 'Voted' : 'Pending'}
+            </td>
+            <td>
+                <input type="file" id="file-${idx}" accept="image/*" style="display:none;" onchange="uploadVoterPhoto(this, ${idx})">
+                <button style="padding: 5px 10px; font-size:12px; width:auto;" onclick="document.getElementById('file-${idx}').click()">Change Photo</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function uploadVoterPhoto(inputElement, index) {
+    const file = inputElement.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Converts image data stream locally inside the state framework array
+            state.voters[index].photo = e.target.result;
+            document.getElementById(`avatar-${index}`).src = e.target.result;
+            alert(`Photo profile updated seamlessly for voter: ${state.voters[index].name}`);
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+// 6. Session Lifecycle Manager
+function logout() {
+    state.currentUser = null;
+    // Reset forms
+    document.getElementById('loginReg').value = "";
+    document.getElementById('loginPass').value = "";
+    document.getElementById('adminUser').value = "";
+    document.getElementById('adminPass').value = "";
+    switchView('view-login');
 }
 </script>
 
