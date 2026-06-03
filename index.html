@@ -215,50 +215,79 @@ Candidate C:
 </footer>
 
 <script>
-
-let voted = false;
-
-let votes = {
-"A":0,
-"B":0,
-"C":0
+// Automatically load live results from the server database when page opens
+window.onload = function() {
+  fetchResults();
 };
 
-function studentLogin(){
-alert("Student Login Connected");
+function fetchResults() {
+  fetch("/api/results")
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById("A").innerText = data.A || 0;
+      document.getElementById("B").innerText = data.B || 0;
+      document.getElementById("C").innerText = data.C || 0;
+    })
+    .catch(err => console.error("Error fetching live results:", err));
 }
 
-function adminLogin(){
-alert("Admin Login Connected");
+function studentLogin() {
+  const regNum = document.getElementById("studentReg").value;
+  const password = document.getElementById("studentPassword").value;
+
+  fetch("/api/login/student", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ regNum, password })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert("Student Login Successful! Welcome " + regNum);
+    } else {
+      alert("Login failed: " + data.message);
+    }
+  })
+  .catch(err => alert("Error during login connection."));
 }
 
-function vote(candidate){
+function adminLogin() {
+  const username = document.getElementById("adminUser").value;
+  const password = document.getElementById("adminPass").value;
 
-if(voted){
-alert("You have already voted.");
-return;
+  fetch("/api/login/admin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert("Admin Access Granted!");
+    } else {
+      alert("Admin Access Denied: " + data.message);
+    }
+  })
+  .catch(err => alert("Error during admin connection."));
 }
 
-if(candidate==="Candidate A"){
-votes.A++;
-document.getElementById("A").innerText=votes.A;
+function vote(candidate) {
+  fetch("/api/vote", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ candidate })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert("Vote submitted successfully to the database.");
+      fetchResults(); // Refresh election tallies live
+    } else {
+      alert("Voting error: " + data.message);
+    }
+  })
+  .catch(err => alert("Error submitting your ballot."));
 }
-
-if(candidate==="Candidate B"){
-votes.B++;
-document.getElementById("B").innerText=votes.B;
-}
-
-if(candidate==="Candidate C"){
-votes.C++;
-document.getElementById("C").innerText=votes.C;
-}
-
-voted=true;
-
-alert("Vote submitted successfully.");
-}
-
 </script>
 
 </body>
