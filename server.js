@@ -118,13 +118,32 @@ app.post("/api/login/student", async (req, res) => {
   }
 });
 
-// Authenticate administrative clearance
-app.post("/api/login/admin", (req, res) => {
+// ==========================================
+// NEW ALIGNED DATABASE ADMIN LOGIN ROUTE
+// ==========================================
+app.post("/api/login/admin", async (req, res) => {
   const { username, password } = req.body;
-  if (username === "admin" && password === "meru2026") {
-    res.json({ success: true });
-  } else {
-    res.status(401).json({ success: false, message: "Access Denied: High authority clearance failure." });
+  
+  if (!username || !password) {
+    return res.status(400).json({ success: false, message: "Username and password are required." });
+  }
+
+  try {
+    // Look up the admin using a case-insensitive query for flexibility
+    const queryText = "SELECT id, username FROM system_admins WHERE LOWER(username) = LOWER($1) AND password = $2";
+    const result = await pool.query(queryText, [username.trim(), password]);
+
+    if (result.rows.length > 0) {
+      res.json({ 
+        success: true, 
+        message: "Administrative clearance verified successfully.",
+        admin: { username: result.rows[0].username }
+      });
+    } else {
+      res.status(401).json({ success: false, message: "Unauthorized credentials code signature." });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -177,6 +196,13 @@ app.post("/api/admin/update-photo", async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
+});
+app.post("/api/admin/update-photo", async (req, res) => {
+  const { studentId, photoData } = req.body;
+  try {
+    await pool.query("UPDATE students SET photo_url = $1 WHERE id = $2", [photoData, studentId]);
+    res.json({ success: true, message: "Voter photograph committed successfully." });
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 });
 
 // 4. Runtime Ingress Configuration
