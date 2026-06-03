@@ -203,6 +203,26 @@ button:hover {
     box-shadow: 0 2px 10px rgba(0,0,0,.1);
 }
 
+/* New Inline Form Card Styling */
+.admin-action-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 25px;
+}
+
+.admin-form-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.admin-form-group input {
+    margin: 5px 0 0 0;
+}
+
 .voter-list-table {
     width: 100%;
     border-collapse: collapse;
@@ -308,7 +328,7 @@ footer {
         </div>
 
         <h2>Executive Presidential Candidates</h2>
-        <div class="candidates" id="voterDashboardCandidatesContainer">
+        <div class="candidates">
             <div class="candidate">
                 <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" id="voterView-img-CandidateA" alt="Candidate A">
                 <h3>Candidate A</h3>
@@ -366,8 +386,27 @@ footer {
 
             <div class="voter-management">
                 <h3>Voter Registry Editor</h3>
-                <p style="font-size: 13px; color:#666; margin-bottom: 15px;">Modify registered student information and apply direct image URLs.</p>
+                <p style="font-size: 13px; color:#666; margin-bottom: 15px;">Modify registered student information and add new election participants directly below.</p>
                 
+                <div class="admin-action-card">
+                    <h4 style="color:#003366; margin-bottom:10px; font-size:14px;">+ Create New Voter Account</h4>
+                    <div class="admin-form-group">
+                        <div>
+                            <label style="font-size:12px; font-weight:bold;">Full Name</label>
+                            <input type="text" id="adminInsertName" placeholder="John Doe">
+                        </div>
+                        <div>
+                            <label style="font-size:12px; font-weight:bold;">Registration No.</label>
+                            <input type="text" id="adminInsertReg" placeholder="CT201/XXXXX/XX">
+                        </div>
+                        <div>
+                            <label style="font-size:12px; font-weight:bold;">Voter Password</label>
+                            <input type="password" id="adminInsertPass" placeholder="Assign password">
+                        </div>
+                    </div>
+                    <button style="background:#003366; font-size:14px; padding:10px;" onclick="handleAdminDirectVoterUpload()">Register & Insert Voter</button>
+                </div>
+
                 <table class="voter-list-table">
                     <thead>
                         <tr>
@@ -394,7 +433,6 @@ footer {
 <script>
 let currentUserSession = null;
 
-// Real-time memory cache matching your original fallback structures for rendering images perfectly
 let memoryCandidatePhotos = {
     "Candidate A": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
     "Candidate B": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
@@ -454,6 +492,38 @@ function handleStudentRegistration() {
         }
     })
     .catch(err => console.error("Communication layer interruption:", err));
+}
+
+// NEW HANDLER: Admin Direct Voter Upload (No structural backend route rewrites needed)
+function handleAdminDirectVoterUpload() {
+    const name = document.getElementById('adminInsertName').value.trim();
+    const regNum = document.getElementById('adminInsertReg').value.trim();
+    const password = document.getElementById('adminInsertPass').value;
+
+    if(!name || !regNum || !password) {
+        return alert("Error: Cannot create an account with empty fields. Provide Name, Reg Number, and Password.");
+    }
+
+    fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, regNum, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            alert(`Success: Profile for ${name} has been securely uploaded to the voter registry!`);
+            // Clear input fields immediately
+            document.getElementById('adminInsertName').value = "";
+            document.getElementById('adminInsertReg').value = "";
+            document.getElementById('adminInsertPass').value = "";
+            // Reload table view to instantly verify listing inclusion
+            fetchAdminDashboardData();
+        } else {
+            alert("Upload Core Refusal: " + data.message);
+        }
+    })
+    .catch(err => alert("Registry interaction fault: " + err.message));
 }
 
 function handleStudentLogin() {
@@ -560,7 +630,7 @@ function fetchAdminDashboardData() {
         voters.forEach(voter => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td><img src="${voter.photo_url}" class="voter-avatar" id="avatar-${voter.id}"></td>
+                <td><img src="${voter.photo_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=50'}" class="voter-avatar" id="avatar-${voter.id}"></td>
                 <td><strong>${voter.reg_no}</strong></td>
                 <td>${voter.fullname}</td>
                 <td style="color: ${voter.has_voted ? 'red' : 'green'}; font-weight:bold;">
@@ -596,12 +666,10 @@ function applyDirectVoterPhotoUrl(studentId, studentName) {
     .catch(err => console.error("Network communication fault during picture updates:", err));
 }
 
-// NEW ACTION: Update Candidate Photos Directly
 function applyDirectCandidatePhotoUrl(candidateName) {
     const newUrl = prompt(`Enter the direct image address URL link for ${candidateName}:`, memoryCandidatePhotos[candidateName]);
     if (newUrl === null || newUrl.trim() === "") return;
 
-    // Local state updating layer so the change takes effect immediately across components without requiring a reload
     memoryCandidatePhotos[candidateName] = newUrl.trim();
     alert(`Image path for ${candidateName} has been successfully assigned to browser cache memory state.`);
 }
