@@ -32,6 +32,7 @@ header button.logout-btn {
     top: 25px;
     background: #cc0000;
     padding: 8px 15px;
+    width: auto;
 }
 
 .container {
@@ -74,18 +75,25 @@ header button.logout-btn {
     padding-bottom: 10px;
 }
 
-.toggle-link {
+/* Beautiful Navigation Buttons for swapping pages */
+.nav-link-btn {
     display: block;
-    margin-top: 15px;
-    color: #003366;
-    text-decoration: none;
-    font-size: 0.9px;
     text-align: center;
+    margin-top: 15px;
+    background: #e2e8f0;
+    color: #003366;
+    border: 1px solid #cbd5e1;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
     cursor: pointer;
+    transition: all 0.2s;
 }
 
-.toggle-link:hover {
-    text-decoration: underline;
+.nav-link-btn:hover {
+    background: #cbd5e1;
 }
 
 input, select {
@@ -230,6 +238,7 @@ footer {
 
 <div class="container">
 
+    <!-- PAGE 1: STUDENT LOGIN (INDEX VIEW) -->
     <div id="view-login" class="page-view active">
         <div class="auth-wrapper">
             <div class="card">
@@ -241,12 +250,15 @@ footer {
                 <input type="password" id="loginPass" placeholder="Enter your password">
                 
                 <button onclick="handleStudentLogin()">Sign In</button>
-                <a class="toggle-link" onclick="switchView('view-register')">Don't have an account? Register here</a>
-                <a class="toggle-link" onclick="switchView('view-admin-login')" style="color: #666; font-size: 12px;">Go to Admin Portal</a>
+                
+                <!-- Fixed Navigation Links -->
+                <div class="nav-link-btn" onclick="switchView('view-register')">Create an Account / Register</div>
+                <div class="nav-link-btn" onclick="switchView('view-admin-login')" style="background: #f8fafc; color: #64748b;">Go to Admin Portal</div>
             </div>
         </div>
     </div>
 
+    <!-- PAGE 2: STUDENT REGISTRATION -->
     <div id="view-register" class="page-view">
         <div class="auth-wrapper">
             <div class="card">
@@ -261,11 +273,12 @@ footer {
                 <input type="password" id="regPass" placeholder="Choose a secure password">
                 
                 <button onclick="handleStudentRegistration()">Create Account</button>
-                <a class="toggle-link" onclick="switchView('view-login')">Already registered? Log in here</a>
+                <div class="nav-link-btn" onclick="switchView('view-login')">Already registered? Log in here</div>
             </div>
         </div>
     </div>
 
+    <!-- PAGE 3: ADMIN LOGIN -->
     <div id="view-admin-login" class="page-view">
         <div class="auth-wrapper">
             <div class="card">
@@ -277,11 +290,12 @@ footer {
                 <input type="password" id="adminPass" placeholder="Enter admin password">
                 
                 <button onclick="handleAdminLogin()">Verify Authority</button>
-                <a class="toggle-link" onclick="switchView('view-login')">Return to Student Login</a>
+                <div class="nav-link-btn" onclick="switchView('view-login')">Return to Student Login</div>
             </div>
         </div>
     </div>
 
+    <!-- PAGE 4: VOTING DASHBOARD (PROTECTED - STUDENTS ONLY) -->
     <div id="view-dashboard" class="page-view">
         <div class="user-welcome">
             <h3>Logged in as: <span id="displayStudentName" style="color:#003366;">Student</span></h3>
@@ -313,10 +327,12 @@ footer {
         </div>
     </div>
 
+    <!-- PAGE 5: ADMIN SYSTEM DASHBOARD (PROTECTED - ADMINS ONLY) -->
     <div id="view-admin-dashboard" class="page-view">
         <h2>System Administration Control Panel</h2>
         
         <div class="admin-grid">
+            <!-- Left Side: Live Tally Monitor -->
             <div class="results-box">
                 <h3>Live Election Results</h3>
                 <div class="result-item">
@@ -333,6 +349,7 @@ footer {
                 </div>
             </div>
 
+            <!-- Right Side: Voter Photo & Registry Records Modifier -->
             <div class="voter-management">
                 <h3>Voter Registry Editor</h3>
                 <p style="font-size: 13px; color:#666; margin-bottom: 15px;">Modify registered student information and upload identification photos.</p>
@@ -348,7 +365,8 @@ footer {
                         </tr>
                     </thead>
                     <tbody id="voterTableBody">
-                        </tbody>
+                        <!-- Dynamic Records populate here -->
+                    </tbody>
                 </table>
             </div>
         </div>
