@@ -162,12 +162,12 @@ button:hover {
 /* Administrative Dashboard Layout Grid */
 .admin-grid {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: 1.2fr 1.8fr;
     gap: 30px;
     margin-top: 20px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .admin-grid { grid-template-columns: 1fr; }
 }
 
@@ -183,10 +183,17 @@ button:hover {
     margin: 15px 0;
     padding: 12px;
     background: #f8fafc;
-    border-left: 4px solid green;
+    border-left: 4px solid #003366;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 15px;
+}
+
+.result-row-info {
     display: flex;
     justify-content: space-between;
-    font-size: 15px;
+    align-items: center;
 }
 
 .voter-management {
@@ -301,23 +308,23 @@ footer {
         </div>
 
         <h2>Executive Presidential Candidates</h2>
-        <div class="candidates">
+        <div class="candidates" id="voterDashboardCandidatesContainer">
             <div class="candidate">
-                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" alt="Candidate A">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150" id="voterView-img-CandidateA" alt="Candidate A">
                 <h3>Candidate A</h3>
                 <p>School of Computing & Informatics</p>
                 <button style="margin-top:15px;" onclick="submitBallot('Candidate A')">Cast Vote</button>
             </div>
 
             <div class="candidate">
-                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150" alt="Candidate B">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150" id="voterView-img-CandidateB" alt="Candidate B">
                 <h3>Candidate B</h3>
                 <p>School of Business & Economics</p>
                 <button style="margin-top:15px;" onclick="submitBallot('Candidate B')">Cast Vote</button>
             </div>
 
             <div class="candidate">
-                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150" alt="Candidate C">
+                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150" id="voterView-img-CandidateC" alt="Candidate C">
                 <h3>Candidate C</h3>
                 <p>School of Engineering</p>
                 <button style="margin-top:15px;" onclick="submitBallot('Candidate C')">Cast Vote</button>
@@ -330,18 +337,30 @@ footer {
         
         <div class="admin-grid">
             <div class="results-box">
-                <h3>Live Election Results</h3>
+                <h3>Live Election Results & Candidates</h3>
+                
                 <div class="result-item">
-                    <span>Candidate A Tally:</span>
-                    <strong class="vote-count" id="countA">0 votes</strong>
+                    <div class="result-row-info">
+                        <span>Candidate A Tally:</span>
+                        <strong class="vote-count" id="countA">0 votes</strong>
+                    </div>
+                    <button style="padding: 5px 10px; font-size:12px; background: #22c55e;" onclick="applyDirectCandidatePhotoUrl('Candidate A')">Change Candidate A Photo</button>
                 </div>
+                
                 <div class="result-item">
-                    <span>Candidate B Tally:</span>
-                    <strong class="vote-count" id="countB">0 votes</strong>
+                    <div class="result-row-info">
+                        <span>Candidate B Tally:</span>
+                        <strong class="vote-count" id="countB">0 votes</strong>
+                    </div>
+                    <button style="padding: 5px 10px; font-size:12px; background: #22c55e;" onclick="applyDirectCandidatePhotoUrl('Candidate B')">Change Candidate B Photo</button>
                 </div>
+                
                 <div class="result-item">
-                    <span>Candidate C Tally:</span>
-                    <strong class="vote-count" id="countC">0 votes</strong>
+                    <div class="result-row-info">
+                        <span>Candidate C Tally:</span>
+                        <strong class="vote-count" id="countC">0 votes</strong>
+                    </div>
+                    <button style="padding: 5px 10px; font-size:12px; background: #22c55e;" onclick="applyDirectCandidatePhotoUrl('Candidate C')">Change Candidate C Photo</button>
                 </div>
             </div>
 
@@ -375,6 +394,13 @@ footer {
 <script>
 let currentUserSession = null;
 
+// Real-time memory cache matching your original fallback structures for rendering images perfectly
+let memoryCandidatePhotos = {
+    "Candidate A": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+    "Candidate B": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
+    "Candidate C": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150"
+};
+
 function switchView(viewId) {
     document.querySelectorAll('.page-view').forEach(view => view.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
@@ -385,8 +411,24 @@ function switchView(viewId) {
         document.getElementById('globalLogout').style.display = 'none';
     }
 
+    if(viewId === 'view-dashboard') {
+        syncCandidatePhotosOnDashboard();
+    }
+
     if(viewId === 'view-admin-dashboard') {
         fetchAdminDashboardData();
+    }
+}
+
+function syncCandidatePhotosOnDashboard() {
+    if(document.getElementById('voterView-img-CandidateA')) {
+        document.getElementById('voterView-img-CandidateA').src = memoryCandidatePhotos["Candidate A"];
+    }
+    if(document.getElementById('voterView-img-CandidateB')) {
+        document.getElementById('voterView-img-CandidateB').src = memoryCandidatePhotos["Candidate B"];
+    }
+    if(document.getElementById('voterView-img-CandidateC')) {
+        document.getElementById('voterView-img-CandidateC').src = memoryCandidatePhotos["Candidate C"];
     }
 }
 
@@ -535,8 +577,6 @@ function fetchAdminDashboardData() {
 
 function applyDirectVoterPhotoUrl(studentId, studentName) {
     const photoData = prompt(`Enter the direct, absolute image address URL for ${studentName}:`);
-    
-    // Fall back or exit if the input action was canceled or completely empty
     if (photoData === null || photoData.trim() === "") return;
 
     fetch("/api/admin/update-photo", {
@@ -554,6 +594,16 @@ function applyDirectVoterPhotoUrl(studentId, studentName) {
         }
     })
     .catch(err => console.error("Network communication fault during picture updates:", err));
+}
+
+// NEW ACTION: Update Candidate Photos Directly
+function applyDirectCandidatePhotoUrl(candidateName) {
+    const newUrl = prompt(`Enter the direct image address URL link for ${candidateName}:`, memoryCandidatePhotos[candidateName]);
+    if (newUrl === null || newUrl.trim() === "") return;
+
+    // Local state updating layer so the change takes effect immediately across components without requiring a reload
+    memoryCandidatePhotos[candidateName] = newUrl.trim();
+    alert(`Image path for ${candidateName} has been successfully assigned to browser cache memory state.`);
 }
 
 function logout() {
