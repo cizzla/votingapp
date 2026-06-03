@@ -347,7 +347,7 @@ footer {
 
             <div class="voter-management">
                 <h3>Voter Registry Editor</h3>
-                <p style="font-size: 13px; color:#666; margin-bottom: 15px;">Modify registered student information and upload identification photos.</p>
+                <p style="font-size: 13px; color:#666; margin-bottom: 15px;">Modify registered student information and apply direct image URLs.</p>
                 
                 <table class="voter-list-table">
                     <thead>
@@ -360,7 +360,7 @@ footer {
                         </tr>
                     </thead>
                     <tbody id="voterTableBody">
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -440,7 +440,6 @@ function handleStudentLogin() {
     .catch(err => alert(err.message));
 }
 
-
 function updateVotingStatusUI() {
     const badge = document.getElementById('voteStatusBadge');
     if(currentUserSession.voted) {
@@ -464,7 +463,6 @@ function handleAdminLogin() {
     .then(async res => {
         const data = await res.json();
         if (!res.ok) {
-            // Displays the specific backend validation message
             throw new Error(data.message || "Unauthorized credentials code signature.");
         }
         return data;
@@ -503,7 +501,6 @@ function submitBallot(candidateName) {
 }
 
 function fetchAdminDashboardData() {
-    // 1. Synchronize Current Database Tally
     fetch("/api/results")
     .then(res => res.json())
     .then(tally => {
@@ -512,7 +509,6 @@ function fetchAdminDashboardData() {
         document.getElementById('countC').innerText = `${tally["Candidate C"] || 0} votes`;
     });
 
-    // 2. Fetch Live Core Registry Arrays
     fetch("/api/admin/voters")
     .then(res => res.json())
     .then(voters => {
@@ -529,8 +525,7 @@ function fetchAdminDashboardData() {
                     ${voter.has_voted ? 'Voted' : 'Pending'}
                 </td>
                 <td>
-                    <input type="file" id="file-${voter.id}" accept="image/*" style="display:none;" onchange="uploadVoterPhoto(this, ${voter.id})">
-                    <button style="padding: 5px 10px; font-size:12px; width:auto;" onclick="document.getElementById('file-${voter.id}').click()">Change Photo</button>
+                    <button style="padding: 5px 10px; font-size:12px; width:auto;" onclick="applyDirectVoterPhotoUrl(${voter.id}, '${voter.fullname}')">Set Photo URL</button>
                 </td>
             `;
             tbody.appendChild(row);
@@ -538,30 +533,27 @@ function fetchAdminDashboardData() {
     });
 }
 
-function uploadVoterPhoto(inputElement, studentId) {
-    const file = inputElement.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const photoData = e.target.result;
+function applyDirectVoterPhotoUrl(studentId, studentName) {
+    const photoData = prompt(`Enter the direct, absolute image address URL for ${studentName}:`);
+    
+    // Fall back or exit if the input action was canceled or completely empty
+    if (photoData === null || photoData.trim() === "") return;
 
-            fetch("/api/admin/update-photo", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ studentId, photoData })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                    document.getElementById(`avatar-${studentId}`).src = photoData;
-                    alert(" Vetting passport document committed successfully down to data array tier.");
-                } else {
-                    alert("Failure executing server payload streaming injection.");
-                }
-            });
+    fetch("/api/admin/update-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, photoData: photoData.trim() })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            document.getElementById(`avatar-${studentId}`).src = photoData.trim();
+            alert(`Voter profile image for ${studentName} successfully updated.`);
+        } else {
+            alert("Failure executing server payload URL assignment.");
         }
-        reader.readAsDataURL(file);
-    }
+    })
+    .catch(err => console.error("Network communication fault during picture updates:", err));
 }
 
 function logout() {
