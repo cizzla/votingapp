@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meru University Voting System</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#f4f6f9;
+}
+
+header{
+background:#003366;
+color:white;
+padding:20px;
+text-align:center;
+}
+
+.container{
+width:90%;
+max-width:1200px;
+margin:auto;
+padding:20px;
+}
+
+.login-section{
+display:flex;
+gap:20px;
+flex-wrap:wrap;
+justify-content:center;
+margin-top:30px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 2px 10px rgba(0,0,0,.1);
+width:350px;
+}
+
+.card h2{
+margin-bottom:15px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:10px 0;
+border:1px solid #ccc;
+border-radius:5px;
+}
+
+button{
+background:#003366;
+color:white;
+border:none;
+padding:10px 20px;
+border-radius:5px;
+cursor:pointer;
+}
+
+button:hover{
+opacity:.9;
+}
+
+.candidates{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+gap:20px;
+margin-top:30px;
+}
+
+.candidate{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 2px 10px rgba(0,0,0,.1);
+text-align:center;
+}
+
+.candidate img{
+width:120px;
+height:120px;
+border-radius:50%;
+object-fit:cover;
+margin-bottom:10px;
+}
+
+.results{
+margin-top:40px;
+background:white;
+padding:20px;
+border-radius:10px;
+}
+
+.vote-count{
+font-weight:bold;
+color:green;
+}
+
+footer{
+margin-top:50px;
+padding:20px;
+background:#003366;
+color:white;
+text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>MERU UNIVERSITY STUDENT ELECTIONS</h1>
+<p>Secure Online Voting Platform</p>
+</header>
+
+<div class="container">
+
+<div class="login-section">
+
+<div class="card">
+<h2>Student Login</h2>
+
+<input type="text" id="studentReg" placeholder="Registration Number">
+
+<input type="password" id="studentPassword" placeholder="Password">
+
+<button onclick="studentLogin()">
+Login
+</button>
+</div>
+
+<div class="card">
+<h2>Admin Login</h2>
+
+<input type="text" id="adminUser" placeholder="Username">
+
+<input type="password" id="adminPass" placeholder="Password">
+
+<button onclick="adminLogin()">
+Admin Login
+</button>
+</div>
+
+</div>
+
+<h2 style="margin-top:40px;">Presidential Candidates</h2>
+
+<div class="candidates">
+
+<div class="candidate">
+<img src="https://via.placeholder.com/120">
+<h3>Candidate A</h3>
+<p>President</p>
+<button onclick="vote('Candidate A')">
+Vote
+</button>
+</div>
+
+<div class="candidate">
+<img src="https://via.placeholder.com/120">
+<h3>Candidate B</h3>
+<p>President</p>
+<button onclick="vote('Candidate B')">
+Vote
+</button>
+</div>
+
+<div class="candidate">
+<img src="https://via.placeholder.com/120">
+<h3>Candidate C</h3>
+<p>President</p>
+<button onclick="vote('Candidate C')">
+Vote
+</button>
+</div>
+
+</div>
+
+<div class="results">
+
+<h2>Election Results</h2>
+
+<p>
+Candidate A:
+<span class="vote-count" id="A">0</span>
+</p>
+
+<p>
+Candidate B:
+<span class="vote-count" id="B">0</span>
+</p>
+
+<p>
+Candidate C:
+<span class="vote-count" id="C">0</span>
+</p>
+
+</div>
+
+</div>
+
+<footer>
+© 2026 Meru University Voting System
+</footer>
+
+<script>
+
+let voted = false;
+
+let votes = {
+"A":0,
+"B":0,
+"C":0
+};
+
+function studentLogin(){
+alert("Student Login Connected");
+}
+
+function adminLogin(){
+alert("Admin Login Connected");
+}
+
+function vote(candidate){
+
+if(voted){
+alert("You have already voted.");
+return;
+}
+
+if(candidate==="Candidate A"){
+votes.A++;
+document.getElementById("A").innerText=votes.A;
+}
+
+if(candidate==="Candidate B"){
+votes.B++;
+document.getElementById("B").innerText=votes.B;
+}
+
+if(candidate==="Candidate C"){
+votes.C++;
+document.getElementById("C").innerText=votes.C;
+}
+
+voted=true;
+
+alert("Vote submitted successfully.");
+}
+
+</script>
+
+</body>
+</html>
