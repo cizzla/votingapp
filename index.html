@@ -440,26 +440,6 @@ function handleStudentLogin() {
     .catch(err => alert(err.message));
 }
 
-function handleAdminLogin() {
-    const username = document.getElementById('adminUser').value;
-    const password = document.getElementById('adminPass').value;
-
-    fetch("/api/login/admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-    })
-    .then(res => {
-        if(!res.ok) throw new Error("Unauthorized credentials code signature.");
-        return res.json();
-    })
-    .then(data => {
-        if(data.success) {
-            switchView('view-admin-dashboard');
-        }
-    })
-    .catch(err => alert(err.message));
-}
 
 function updateVotingStatusUI() {
     const badge = document.getElementById('voteStatusBadge');
@@ -472,6 +452,31 @@ function updateVotingStatusUI() {
     }
 }
 
+function handleAdminLogin() {
+    const username = document.getElementById('adminUser').value.trim();
+    const password = document.getElementById('adminPass').value;
+
+    fetch("/api/login/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+    })
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+            // Displays the specific backend validation message
+            throw new Error(data.message || "Unauthorized credentials code signature.");
+        }
+        return data;
+    })
+    .then(data => {
+        if (data.success) {
+            switchView('view-admin-dashboard');
+        }
+    })
+    .catch(err => alert(err.message));
+}
+    
 function submitBallot(candidateName) {
     if(currentUserSession.voted) {
         return alert("Security Blockade: Account already mapped to an active transaction ballot receipt.");
