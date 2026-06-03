@@ -24,6 +24,7 @@ header {
     padding: 20px;
     text-align: center;
     position: relative;
+    box-shadow: 0 2px 10px rgba(0,0,0,.15);
 }
 
 header button.logout-btn {
@@ -42,7 +43,7 @@ header button.logout-btn {
     padding: 20px;
 }
 
-/* Page View Management */
+/* Structural Page Routing States */
 .page-view {
     display: none;
 }
@@ -51,7 +52,7 @@ header button.logout-btn {
     display: block;
 }
 
-/* Forms & Panels Layout */
+/* User Interface Forms Layout */
 .auth-wrapper {
     display: flex;
     justify-content: center;
@@ -75,7 +76,6 @@ header button.logout-btn {
     padding-bottom: 10px;
 }
 
-/* Beautiful Navigation Buttons for swapping pages */
 .nav-link-btn {
     display: block;
     text-align: center;
@@ -83,13 +83,13 @@ header button.logout-btn {
     background: #e2e8f0;
     color: #003366;
     border: 1px solid #cbd5e1;
-    padding: 10px;
+    padding: 12px;
     border-radius: 5px;
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease-in-out;
 }
 
 .nav-link-btn:hover {
@@ -122,18 +122,7 @@ button:hover {
     background: #002244;
 }
 
-/* Voting Dashboard Layout */
-.user-welcome {
-    background: white;
-    padding: 15px;
-    border-radius: 5px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
+/* Candidate Display Section Grid */
 .candidates {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -159,7 +148,18 @@ button:hover {
     border: 3px solid #f4f6f9;
 }
 
-/* Admin Panel Layout */
+.user-welcome {
+    background: white;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Administrative Dashboard Layout Grid */
 .admin-grid {
     display: grid;
     grid-template-columns: 1fr 2fr;
@@ -181,11 +181,12 @@ button:hover {
 
 .result-item {
     margin: 15px 0;
-    padding: 10px;
+    padding: 12px;
     background: #f8fafc;
     border-left: 4px solid green;
     display: flex;
     justify-content: space-between;
+    font-size: 15px;
 }
 
 .voter-management {
@@ -205,6 +206,7 @@ button:hover {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #ddd;
+    font-size: 14px;
 }
 
 .voter-list-table th {
@@ -217,6 +219,7 @@ button:hover {
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
+    border: 1px solid #ccc;
 }
 
 footer {
@@ -238,7 +241,6 @@ footer {
 
 <div class="container">
 
-    <!-- PAGE 1: STUDENT LOGIN (INDEX VIEW) -->
     <div id="view-login" class="page-view active">
         <div class="auth-wrapper">
             <div class="card">
@@ -251,14 +253,12 @@ footer {
                 
                 <button onclick="handleStudentLogin()">Sign In</button>
                 
-                <!-- Fixed Navigation Links -->
                 <div class="nav-link-btn" onclick="switchView('view-register')">Create an Account / Register</div>
                 <div class="nav-link-btn" onclick="switchView('view-admin-login')" style="background: #f8fafc; color: #64748b;">Go to Admin Portal</div>
             </div>
         </div>
     </div>
 
-    <!-- PAGE 2: STUDENT REGISTRATION -->
     <div id="view-register" class="page-view">
         <div class="auth-wrapper">
             <div class="card">
@@ -278,7 +278,6 @@ footer {
         </div>
     </div>
 
-    <!-- PAGE 3: ADMIN LOGIN -->
     <div id="view-admin-login" class="page-view">
         <div class="auth-wrapper">
             <div class="card">
@@ -295,7 +294,6 @@ footer {
         </div>
     </div>
 
-    <!-- PAGE 4: VOTING DASHBOARD (PROTECTED - STUDENTS ONLY) -->
     <div id="view-dashboard" class="page-view">
         <div class="user-welcome">
             <h3>Logged in as: <span id="displayStudentName" style="color:#003366;">Student</span></h3>
@@ -327,12 +325,10 @@ footer {
         </div>
     </div>
 
-    <!-- PAGE 5: ADMIN SYSTEM DASHBOARD (PROTECTED - ADMINS ONLY) -->
     <div id="view-admin-dashboard" class="page-view">
         <h2>System Administration Control Panel</h2>
         
         <div class="admin-grid">
-            <!-- Left Side: Live Tally Monitor -->
             <div class="results-box">
                 <h3>Live Election Results</h3>
                 <div class="result-item">
@@ -349,7 +345,6 @@ footer {
                 </div>
             </div>
 
-            <!-- Right Side: Voter Photo & Registry Records Modifier -->
             <div class="voter-management">
                 <h3>Voter Registry Editor</h3>
                 <p style="font-size: 13px; color:#666; margin-bottom: 15px;">Modify registered student information and upload identification photos.</p>
@@ -365,8 +360,7 @@ footer {
                         </tr>
                     </thead>
                     <tbody id="voterTableBody">
-                        <!-- Dynamic Records populate here -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
         </div>
@@ -379,22 +373,12 @@ footer {
 </footer>
 
 <script>
-// Mock Local Database to ensure fully operational interactivity out-of-the-box
-let state = {
-    voters: [
-        { regNum: "CT201/0001/22", name: "John Doe", voted: false, photo: "https://via.placeholder.com/40" },
-        { regNum: "EG201/0055/22", name: "Jane Karimi", voted: true, photo: "https://via.placeholder.com/40" }
-    ],
-    tally: { "Candidate A": 1, "Candidate B": 0, "Candidate C": 0 },
-    currentUser: null
-};
+let currentUserSession = null;
 
-// 1. Navigation Controller
 function switchView(viewId) {
     document.querySelectorAll('.page-view').forEach(view => view.classList.remove('active'));
     document.getElementById(viewId).classList.add('active');
     
-    // Manage logout visibility
     if(viewId === 'view-dashboard' || viewId === 'view-admin-dashboard') {
         document.getElementById('globalLogout').style.display = 'block';
     } else {
@@ -402,70 +386,84 @@ function switchView(viewId) {
     }
 
     if(viewId === 'view-admin-dashboard') {
-        renderAdminDashboard();
+        fetchAdminDashboardData();
     }
 }
 
-// 2. Student Authentication Logic
 function handleStudentRegistration() {
     const name = document.getElementById('regName').value.trim();
     const regNum = document.getElementById('regId').value.trim();
-    const pass = document.getElementById('regPass').value;
+    const password = document.getElementById('regPass').value;
 
-    if(!name || !regNum || !pass) return alert("Please fill out all registration fields.");
+    if(!name || !regNum || !password) return alert("All fields must be filled to complete registration.");
 
-    // Check duplicate
-    const exists = state.voters.find(v => v.regNum.toLowerCase() === regNum.toLowerCase());
-    if(exists) return alert("This registration number is already registered.");
-
-    // Append new profile record
-    state.voters.push({
-        regNum: regNum,
-        name: name,
-        voted: false,
-        photo: "https://via.placeholder.com/40"
-    });
-
-    alert("Registration Account Created Successfully! Proceed to login.");
-    switchView('view-login');
+    fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, regNum, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            alert(data.message);
+            switchView('view-login');
+        } else {
+            alert("Registration Fault: " + data.message);
+        }
+    })
+    .catch(err => console.error("Communication layer interruption:", err));
 }
 
 function handleStudentLogin() {
     const regNum = document.getElementById('loginReg').value.trim();
-    const pass = document.getElementById('loginPass').value;
+    const password = document.getElementById('loginPass').value;
 
-    if(!regNum || !pass) return alert("Provide both registration ID and password.");
+    if(!regNum || !password) return alert("Credentials cannot be submitted blank.");
 
-    // Verify record exists 
-    const profile = state.voters.find(v => v.regNum.toLowerCase() === regNum.toLowerCase());
-    
-    if(!profile) {
-        return alert("Account not found. Please register your student details first.");
-    }
-
-    state.currentUser = profile;
-    document.getElementById('displayStudentName').innerText = profile.name;
-    updateVotingStatusUI();
-    switchView('view-dashboard');
+    fetch("/api/login/student", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ regNum, password })
+    })
+    .then(res => {
+        if(!res.ok) throw new Error("Invalid username/password combinations.");
+        return res.json();
+    })
+    .then(data => {
+        if(data.success) {
+            currentUserSession = data.user;
+            document.getElementById('displayStudentName').innerText = data.user.name;
+            updateVotingStatusUI();
+            switchView('view-dashboard');
+        }
+    })
+    .catch(err => alert(err.message));
 }
 
-// 3. Admin Authentication Logic
 function handleAdminLogin() {
-    const user = document.getElementById('adminUser').value;
-    const pass = document.getElementById('adminPass').value;
+    const username = document.getElementById('adminUser').value;
+    const password = document.getElementById('adminPass').value;
 
-    if(user === "admin" && pass === "meru2026") {
-        state.currentUser = { name: "System Admin", role: "admin" };
-        switchView('view-admin-dashboard');
-    } else {
-        alert("Invalid Admin clearance codes.");
-    }
+    fetch("/api/login/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => {
+        if(!res.ok) throw new Error("Unauthorized credentials code signature.");
+        return res.json();
+    })
+    .then(data => {
+        if(data.success) {
+            switchView('view-admin-dashboard');
+        }
+    })
+    .catch(err => alert(err.message));
 }
 
-// 4. Voting Logic Engine
 function updateVotingStatusUI() {
     const badge = document.getElementById('voteStatusBadge');
-    if(state.currentUser.voted) {
+    if(currentUserSession.voted) {
         badge.innerText = "PASSED BALLOT: Voted";
         badge.style.color = "red";
     } else {
@@ -475,72 +473,98 @@ function updateVotingStatusUI() {
 }
 
 function submitBallot(candidateName) {
-    if(state.currentUser.voted) {
-        return alert("Security Refusal: You have already exercised your single ballot option.");
+    if(currentUserSession.voted) {
+        return alert("Security Blockade: Account already mapped to an active transaction ballot receipt.");
     }
 
-    if(confirm(`Are you certain you want to commit your vote to ${candidateName}? This choice cannot be reverted.`)) {
-        state.tally[candidateName]++;
-        state.currentUser.voted = true;
-        updateVotingStatusUI();
-        alert("Ballot Successfully verified and cast anonymously into database tier.");
+    if(confirm(`Are you certain you want to commit your student ballot token to ${candidateName}? This entry is finalized immediately.`)) {
+        fetch("/api/vote", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ studentId: currentUserSession.id, candidate: candidateName })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                currentUserSession.voted = true;
+                updateVotingStatusUI();
+                alert(data.message);
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(err => console.error("Database tracking fault:", err));
     }
 }
 
-// 5. Admin Dashboard Renderer (Modifying Voters & Managing Image Upload Streams)
-function renderAdminDashboard() {
-    // Sync Results
-    document.getElementById('countA').innerText = `${state.tally["Candidate A"]} votes`;
-    document.getElementById('countB').innerText = `${state.tally["Candidate B"]} votes`;
-    document.getElementById('countC').innerText = `${state.tally["Candidate C"]} votes`;
+function fetchAdminDashboardData() {
+    // 1. Synchronize Current Database Tally
+    fetch("/api/results")
+    .then(res => res.json())
+    .then(tally => {
+        document.getElementById('countA').innerText = `${tally["Candidate A"] || 0} votes`;
+        document.getElementById('countB').innerText = `${tally["Candidate B"] || 0} votes`;
+        document.getElementById('countC').innerText = `${tally["Candidate C"] || 0} votes`;
+    });
 
-    // Populate Student records table row fields
-    const tbody = document.getElementById('voterTableBody');
-    tbody.innerHTML = "";
+    // 2. Fetch Live Core Registry Arrays
+    fetch("/api/admin/voters")
+    .then(res => res.json())
+    .then(voters => {
+        const tbody = document.getElementById('voterTableBody');
+        tbody.innerHTML = "";
 
-    state.voters.forEach((voter, idx) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><img src="${voter.photo}" class="voter-avatar" id="avatar-${idx}"></td>
-            <td><strong>${voter.regNum}</strong></td>
-            <td>${voter.name}</td>
-            <td style="color: ${voter.voted ? 'red' : 'green'}; font-weight:bold;">
-                ${voter.voted ? 'Voted' : 'Pending'}
-            </td>
-            <td>
-                <input type="file" id="file-${idx}" accept="image/*" style="display:none;" onchange="uploadVoterPhoto(this, ${idx})">
-                <button style="padding: 5px 10px; font-size:12px; width:auto;" onclick="document.getElementById('file-${idx}').click()">Change Photo</button>
-            </td>
-        `;
-        tbody.appendChild(row);
+        voters.forEach(voter => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><img src="${voter.photo_url}" class="voter-avatar" id="avatar-${voter.id}"></td>
+                <td><strong>${voter.reg_no}</strong></td>
+                <td>${voter.fullname}</td>
+                <td style="color: ${voter.has_voted ? 'red' : 'green'}; font-weight:bold;">
+                    ${voter.has_voted ? 'Voted' : 'Pending'}
+                </td>
+                <td>
+                    <input type="file" id="file-${voter.id}" accept="image/*" style="display:none;" onchange="uploadVoterPhoto(this, ${voter.id})">
+                    <button style="padding: 5px 10px; font-size:12px; width:auto;" onclick="document.getElementById('file-${voter.id}').click()">Change Photo</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
     });
 }
 
-function uploadVoterPhoto(inputElement, index) {
+function uploadVoterPhoto(inputElement, studentId) {
     const file = inputElement.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            // Converts image data stream locally inside the state framework array
-            state.voters[index].photo = e.target.result;
-            document.getElementById(`avatar-${index}`).src = e.target.result;
-            alert(`Photo profile updated seamlessly for voter: ${state.voters[index].name}`);
+            const photoData = e.target.result;
+
+            fetch("/api/admin/update-photo", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ studentId, photoData })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    document.getElementById(`avatar-${studentId}`).src = photoData;
+                    alert(" Vetting passport document committed successfully down to data array tier.");
+                } else {
+                    alert("Failure executing server payload streaming injection.");
+                }
+            });
         }
         reader.readAsDataURL(file);
     }
 }
 
-// 6. Session Lifecycle Manager
 function logout() {
-    state.currentUser = null;
-    // Reset forms
+    currentUserSession = null;
     document.getElementById('loginReg').value = "";
     document.getElementById('loginPass').value = "";
-    document.getElementById('adminUser').value = "";
-    document.getElementById('adminPass').value = "";
     switchView('view-login');
 }
 </script>
-
 </body>
 </html>
