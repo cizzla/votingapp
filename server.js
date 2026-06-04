@@ -72,51 +72,73 @@ app.post("/api/admin/update-candidate-photo", async (req, res) => {
 // Student Login Verification Routing
 app.post("/api/login/student", async (req, res) => {
   const { regNum, password } = req.body;
+  
+  if (!regNum || !password) {
+    return res.status(400).json({ success: false, message: "Credentials cannot be submitted blank." });
+  }
+
   try {
+    // Force lowercase and trim white space to prevent case mismatch bugs
+    const cleanRegNum = regNum.trim().toLowerCase();
+
     const result = await pool.query(
-      "SELECT id, reg_no, fullname, has_voted, photo_url FROM students WHERE LOWER(reg_no) = LOWER($1) AND password = $2",
-      [regNum.trim(), password]
+      "SELECT id, reg_no, fullname, has_voted, photo_url FROM students WHERE LOWER(reg_no) = $1 AND password = $2",
+      [cleanRegNum, password.trim()]
     );
 
     if (result.rows.length > 0) {
       const student = result.rows[0];
       res.json({
         success: true,
-        user: { id: student.id, regNum: student.reg_no, name: student.fullname, voted: student.has_voted, photoUrl: student.photo_url }
+        user: { 
+          id: student.id, 
+          regNum: student.reg_no, 
+          name: student.fullname, 
+          voted: student.has_voted, 
+          photoUrl: student.photo_url 
+        }
       });
     } else {
-      res.status(404).json({ success: false, message: "Account not found. Please register your student details first." });
+      res.status(401).json({ success: false, message: "Invalid registration number or password combination." });
     }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 });
 
 // Registration Endpoint
 app.post("/api/register", async (req, res) => {
   const { name, regNum, password } = req.body;
+
+  if (!name || !regNum || !password) {
+    return res.status(400).json({ success: false, message: "All fields must be filled to complete registration." });
+  }
+
   try {
+    // Sanitize data before inserting into Neon Database
+    const cleanRegNum = regNum.trim().toLowerCase();
+    const cleanName = name.trim();
+
     await pool.query(
       "INSERT INTO students (fullname, reg_no, password, has_voted) VALUES ($1, $2, $3, false)",
-      [name, regNum, password]
+      [cleanName, cleanRegNum, password.trim()]
     );
     res.json({ success: true, message: "Registration processing finalized successfully!" });
   } catch (err) {
+    if (err.code === '23505') {
+      return res.status(400).json({ success: false, message: "This student registration number already exists." });
+    }
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-// Submit Ballot Tracking Endpoint (FIXED COLUMN IDENTIFIER MATCHING SCHEMA)
+// Submit Ballot Tracking Endpoint
 app.post("/api/vote", async (req, res) => {
   const { studentId, candidate } = req.body;
   try {
-    // Start transactional block
     await pool.query("BEGIN");
     
-    // Log choice into votes table, targeting the 'candidate' column directly
     await pool.query("INSERT INTO votes (student_id, candidate) VALUES ($1, $2)", [studentId, candidate]);
-    
-    // Toggle active authorization record flag on the voters list
     await pool.query("UPDATE students SET has_voted = true WHERE id = $1", [studentId]);
     
     await pool.query("COMMIT");
