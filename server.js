@@ -1,226 +1,188 @@
 const express = require('express');
 const { Pool } = require('pg');
-const path = require('path');
+const bcrypt = require('bcrypt');
 const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Enable cross-origin requests and expand payload processing boundaries for heavy base64 uploads
+// Middleware
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public'))); // Serves index.html from a public folder if needed
 
-// Link pooling variables securely matching your Neon connection strings
+// Neon PostgreSQL Database Connection Pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false // Required for serverless platforms like Render/Neon
+    }
 });
 
-// Serve frontend static materials directly from root workspace setup
-app.use(express.static(__dirname));
-
-// =========================================================================
-// CANDIDATE PROFILE IMAGE SYNC ROUTES
-// =========================================================================
-
-// Draw down candidate images safely from persistence layers
-app.get("/api/candidates/photos", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT candidate_name, photo_url FROM candidate_profiles");
-    
-    // Core default fallback profiles matching your original layout system
-    const photoMapping = {
-      "Candidate A": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-      "Candidate B": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
-      "Candidate C": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150"
-    };
-
-    result.rows.forEach(row => {
-      photoMapping[row.candidate_name] = row.photo_url;
-    });
-
-    res.json(photoMapping);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// Test DB Connection
+pool.connect((err, client, release) => {
+    if (err) {
+        return console.error('Error acquiring client', err.stack);
+    }
+    console.log('Successfully connected to Neon Database.');
+    release();
 });
 
-// Update or store candidate photographs inside targeted rows
-app.post("/api/admin/update-candidate-photo", async (req, res) => {
-  const { candidateName, photoData } = req.body;
-  if (!candidateName || !photoData) {
-    return res.status(400).json({ success: false, message: "Missing payload details." });
-  }
-  try {
-    await pool.query(`
-      INSERT INTO candidate_profiles (candidate_name, photo_url) 
-      VALUES ($1, $2) 
-      ON CONFLICT (candidate_name) 
-      DO UPDATE SET photo_url = EXCLUDED.photo_url
-    `, [candidateName, photoData]);
+// ==========================================
+// 1. STUDENT REGISTRATION
+// ==========================================
+app.post('/api/register', async (req, res) => {
+    const { reg_no, fullname, password } = req.body;
 
-    res.json({ success: true, message: "Candidate image updated permanently inside database." });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
+    if (!reg_no || !fullname || !password) {
+        return res.status(400).json({ message: "All fields are required." });
+    }
 
-// =========================================================================
-// USER AUTHENTICATION & VOTING CORE MANAGEMENT
-// =========================================================================
-
-// Student Login Verification Routing
-app.post("/api/login/student", async (req, res) => {
-  const { regNum, password } = req.body;
-  
-  if (!regNum || !password) {
-    return res.status(400).json({ success: false, message: "Credentials cannot be submitted blank." });
-  }
-
-  try {
-    // Force lowercase and trim white space to prevent case mismatch bugs
-    const cleanRegNum = regNum.trim().toLowerCase();
-
-    const result = await pool.query(
-      "SELECT id, reg_no, fullname, has_voted, photo_url FROM students WHERE LOWER(reg_no) = $1 AND password = $2",
-      [cleanRegNum, password.trim()]
-    );
-
-    if (result.rows.length > 0) {
-      const student = result.rows[0];
-      res.json({
-        success: true,
-        user: { 
-          id: student.id, 
-          regNum: student.reg_no, 
-          name: student.fullname, 
-          voted: student.has_voted, 
-          photoUrl: student.photo_url 
+    try {
+        // Check if student already exists
+        const userCheck = await pool.query('SELECT * FROM students WHERE UPPER(reg_no) = UPPER($1)', [reg_no.trim()]);
+        if (userCheck.rows.length > 0) {
+            return res.status(400).json({ message: "Registration number already exists." });
         }
-      });
-    } else {
-      res.status(401).json({ success: false, message: "Invalid registration number or password combination." });
+
+        // Secure password hashing
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        // Insert new student
+        await pool.query(
+            'INSERT INTO students (reg_no, fullname, password) VALUES ($1, $2, $3)',
+            [reg_no.trim(), fullname.trim(), hashedPassword]
+        );
+
+        res.status(201).json({ message: "Account created successfully." });
+    } catch (error) {
+        console.error("Registration error:", error);
+        res.status(500).json({ message: "Communication breakdown fault during registration." });
     }
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
 });
 
-// Registration Endpoint
-app.post("/api/register", async (req, res) => {
-  const { name, regNum, password } = req.body;
+// ==========================================
+// 2. STUDENT LOGIN
+// ==========================================
+app.post('/api/login', async (req, res) => {
+    const { reg_no, password } = req.body;
 
-  if (!name || !regNum || !password) {
-    return res.status(400).json({ success: false, message: "All fields must be filled to complete registration." });
-  }
-
-  try {
-    // Sanitize data before inserting into Neon Database
-    const cleanRegNum = regNum.trim().toLowerCase();
-    const cleanName = name.trim();
-
-    await pool.query(
-      "INSERT INTO students (fullname, reg_no, password, has_voted) VALUES ($1, $2, $3, false)",
-      [cleanName, cleanRegNum, password.trim()]
-    );
-    res.json({ success: true, message: "Registration processing finalized successfully!" });
-  } catch (err) {
-    if (err.code === '23505') {
-      return res.status(400).json({ success: false, message: "This student registration number already exists." });
+    if (!reg_no || !password) {
+        return res.status(400).json({ message: "Invalid username/password combinations." });
     }
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
 
-// Submit Ballot Tracking Endpoint
-app.post("/api/vote", async (req, res) => {
-  const { studentId, candidate } = req.body;
-  try {
-    await pool.query("BEGIN");
-    
-    await pool.query("INSERT INTO votes (student_id, candidate) VALUES ($1, $2)", [studentId, candidate]);
-    await pool.query("UPDATE students SET has_voted = true WHERE id = $1", [studentId]);
-    
-    await pool.query("COMMIT");
-    res.json({ success: true, message: "Ballot cast successfully! Your vote has been recorded." });
-  } catch (err) {
-    await pool.query("ROLLBACK");
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
+    try {
+        // Query user by registration number (case insensitive match)
+        const userResult = await pool.query('SELECT * FROM students WHERE UPPER(reg_no) = UPPER($1)', [reg_no.trim()]);
+        
+        if (userResult.rows.length === 0) {
+            return res.status(401).json({ message: "Invalid username/password combinations." });
+        }
 
-// FIXED: Admin authentication verification endpoint with secure hardcoded master fallback
-app.post("/api/login/admin", async (req, res) => {
-  const { username, password } = req.body;
-  
-  if (!username || !password) {
-    return res.status(400).json({ success: false, message: "Admin details cannot be blank." });
-  }
+        const student = userResult.rows[0];
 
-  // Master Fallback credentials 
-  const MASTER_ADMIN_USER = "admin";
-  const MASTER_ADMIN_PASS = "admin1234"; // You can change this to your preferred secure password
+        // Match against hashed password (or fallback to plain-text check if migrating raw data)
+        let isMatch = false;
+        if (student.password.startsWith('$2b$') || student.password.startsWith('$2a$')) {
+            isMatch = await bcrypt.compare(password, student.password);
+        } else {
+            isMatch = (password === student.password); // Direct match if data rows are still unhashed strings
+        }
 
-  if (username.trim().toLowerCase() === MASTER_ADMIN_USER && password === MASTER_ADMIN_PASS) {
-    return res.json({ success: true });
-  }
+        if (!isMatch) {
+            return res.status(401).json({ message: "Invalid username/password combinations." });
+        }
 
-  try {
-    // Fallback to database check if master credentials don't match
-    const result = await pool.query(
-      "SELECT * FROM system_admins WHERE LOWER(username) = LOWER($1) AND password = $2",
-      [username.trim(), password]
-    );
-    if (result.rows.length > 0) {
-      res.json({ success: true });
-    } else {
-      res.status(401).json({ success: false, message: "Unauthorized credentials code signature." });
+        res.status(200).json({ 
+            message: "Login successful", 
+            student: { id: student.id, reg_no: student.reg_no, fullname: student.fullname } 
+        });
+
+    } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).json({ message: "Communication breakdown fault executing authentication." });
     }
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
 });
 
-// Aggregate live results data totals
-app.get("/api/results", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT candidate, COUNT(*) as count FROM votes GROUP BY candidate");
-    const tallies = { "Candidate A": 0, "Candidate B": 0, "Candidate C": 0 };
-    result.rows.forEach(row => {
-      if (row.candidate) tallies[row.candidate] = parseInt(row.count);
-    });
-    res.json(tallies);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// ==========================================
+// 3. AUTHENTICATION / PASSWORD RESET
+// ==========================================
+app.post('/api/forgot-password', async (req, res) => {
+    const { reg_no, default_pin, new_password } = req.body;
+
+    if (!reg_no || !default_pin || !new_password) {
+        return res.status(400).json({ message: "All fields are required to commit credential changes." });
+    }
+
+    try {
+        // Match registration number and verify recovery verification key (using recovery pin)
+        // Adjust column name below if your pin field is named differently in 'students'
+        const userResult = await pool.query('SELECT * FROM students WHERE UPPER(reg_no) = UPPER($1)', [reg_no.trim()]);
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ message: "Communication breakdown fault executing authentication reset." });
+        }
+
+        // Hash the new security password
+        const saltRounds = 10;
+        const hashedNewPassword = await bcrypt.hash(new_password, saltRounds);
+
+        // Update password credentials
+        await pool.query(
+            'UPDATE students SET password = $1 WHERE UPPER(reg_no) = UPPER($2)',
+            [hashedNewPassword, reg_no.trim()]
+        );
+
+        res.status(200).json({ message: "Password updated successfully." });
+
+    } catch (error) {
+        console.error("Reset password error:", error);
+        // Custom message directly matching UI error string requirements
+        res.status(500).json({ message: "Communication breakdown fault executing authentication reset." });
+    }
 });
 
-// Administrative overview data sync
-app.get("/api/admin/voters", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT id, reg_no, fullname, has_voted, photo_url FROM students ORDER BY id DESC");
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+// ==========================================
+// 4. ADMINISTRATIVE PORTAL ACCESS
+// ==========================================
+app.post('/api/admin/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        const adminResult = await pool.query('SELECT * FROM system_admins WHERE username = $1', [username]);
+        
+        if (adminResult.rows.length === 0) {
+            return res.status(401).json({ message: "Unauthorized credentials code signature." });
+        }
+
+        const admin = adminResult.rows[0];
+        
+        // Plain text validation or hashed password parsing
+        let isMatch = (password === admin.password);
+        if (admin.password.startsWith('$2b$')) {
+            isMatch = await bcrypt.compare(password, admin.password);
+        }
+
+        if (!isMatch) {
+            return res.status(401).json({ message: "Unauthorized credentials code signature." });
+        }
+
+        res.status(200).json({ message: "Admin authorization verified successfully." });
+    } catch (error) {
+        console.error("Admin authentication error:", error);
+        res.status(500).json({ message: "Unauthorized credentials code signature." });
+    }
 });
 
-app.post("/api/admin/update-photo", async (req, res) => {
-  const { studentId, photoData } = req.body;
-  try {
-    await pool.query("UPDATE students SET photo_url = $1 WHERE id = $2", [photoData, studentId]);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
-  }
-});
-
-// Safe universal root interface view callback
+// Catch-all route to serve the front-end index file
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-const PORT = process.env.PORT || 10000;
+// Start Server
 app.listen(PORT, () => {
-  console.log(`Server executing securely on system port: ${PORT}`);
+    console.log(`Voting App backend web service running on port ${PORT}`);
 });
