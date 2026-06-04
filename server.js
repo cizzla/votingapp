@@ -1,32 +1,43 @@
-// Verify student registration authentication state
-app.post("/api/login/student", async (req, res) => {
-  const { regNum, password } = req.body;
-  if (!regNum || !password) {
-    return res.status(400).json({ success: false, message: "Credentials cannot be empty." });
+// 1. Fetch persistent Candidate images from the database
+app.get("/api/candidates/photos", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT candidate_name, photo_url FROM candidate_profiles");
+    
+    // Create a fallback mapping matching your original frontend memory configuration
+    const photoMapping = {
+      "Candidate A": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
+      "Candidate B": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150",
+      "Candidate C": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150"
+    };
+
+    // Override defaults with whatever is saved in your DB
+    result.rows.forEach(row => {
+      photoMapping[row.candidate_name] = row.photo_url;
+    });
+
+    res.json(photoMapping);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2. Save an uploaded Candidate image permanently to the database
+app.post("/api/admin/update-candidate-photo", async (req, res) => {
+  const { candidateName, photoData } = req.body;
+  if (!candidateName || !photoData) {
+    return res.status(400).json({ success: false, message: "Missing tracking payload arguments." });
   }
 
   try {
-    // FIX: Explicitly pulled photo_url out here so it transfers to client session
-    const result = await pool.query(
-      "SELECT id, reg_no, fullname, photo_url, has_voted FROM students WHERE LOWER(reg_no) = LOWER($1) AND password = $2",
-      [regNum.trim().toLowerCase(), password]
-    );
+    // UPSERT syntax: Inserts if missing, updates if it already exists
+    await pool.query(`
+      INSERT INTO candidate_profiles (candidate_name, photo_url) 
+      VALUES ($1, $2) 
+      ON CONFLICT (candidate_name) 
+      DO UPDATE SET photo_url = EXCLUDED.photo_url
+    `, [candidateName, photoData]);
 
-    if (result.rows.length > 0) {
-      const studentProfile = result.rows[0];
-      res.json({
-        success: true,
-        user: { 
-          id: studentProfile.id, 
-          regNum: studentProfile.reg_no, 
-          name: studentProfile.fullname, 
-          voted: studentProfile.has_voted,
-          photoUrl: studentProfile.photo_url
-        }
-      });
-    } else {
-      res.status(401).json({ success: false, message: "Access Denied: Invalid Student registration number or security token." });
-    }
+    res.json({ success: true, message: "Candidate photograph saved permanently to database." });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
