@@ -284,13 +284,10 @@ footer {
 
 <div class="container">
 
- <div style="text-align: center; margin-top: 15px;">
-    <a href="#" id="forgotPasswordLink" style="color: #0284c7; text-decoration: none; font-size: 0.9rem;">Forgot Password?</a>
-</div>
-
+<!-- Real life Password Reset Overlay Popup Layer -->
 <div id="recoveryModal" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:10000; align-items:center; justify-content:center;">
     <div style="background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-        <h3 style="margin-top:0; color:#0f172a;">Account Password Reset</h3>
+        <h3 style="margin-top:0; color:#0f172a; margin-bottom: 10px;">Account Password Reset</h3>
         <p style="font-size:0.85rem; color:#64748b; margin-bottom:20px;">Provide verification keys to commit credential changes.</p>
         
         <label style="display:block; font-size:0.8rem; margin-bottom:5px; font-weight:600;">Registration Number</label>
@@ -303,11 +300,38 @@ footer {
         <input type="password" id="resetNewPassword" placeholder="Minimum 4 characters" style="width:100%; padding:10px; margin-bottom:20px; border:1px solid #cbd5e1; border-radius:4px;">
         
         <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button type="button" id="closeRecoveryBtn" style="padding:10px 15px; background:#e2e8f0; border:none; border-radius:4px; cursor:pointer;">Cancel</button>
-            <button type="button" id="executeResetBtn" style="padding:10px 15px; background:#0f172a; color:white; border:none; border-radius:4px; cursor:pointer;">Update Password</button>
+            <button type="button" id="closeRecoveryBtn" style="padding:10px 15px; background:#e2e8f0; border:none; border-radius:4px; cursor:pointer; color: #333; width: auto; font-size: 14px;">Cancel</button>
+            <button type="button" id="executeResetBtn" style="padding:10px 15px; background:#0f172a; color:white; border:none; border-radius:4px; cursor:pointer; width: auto; font-size: 14px;">Update Password</button>
         </div>
     </div>
 </div>
+
+    <!-- VIEW: STUDENT ACCESS LOGIN (RESTORED CARD VIEW) -->
+    <div id="view-login" class="page-view active">
+        <div class="auth-wrapper">
+            <div class="card">
+                <h2>Student Login</h2>
+                <label>Registration Number</label>
+                <input type="text" id="loginReg" placeholder="e.g., CT/102/120653/24">
+                
+                <label>Password</label>
+                <input type="password" id="loginPass" placeholder="••••">
+                
+                <button type="button" onclick="handleStudentLogin()">Sign In</button>
+                
+                <!-- Sleek button perfectly nested under login fields -->
+                <div style="text-align: center; margin-top: 12px; margin-bottom: 5px;">
+                    <button type="button" id="forgotPasswordLink" style="background: none; border: none; color: #0284c7; font-size: 0.85rem; cursor: pointer; text-decoration: underline; padding: 0; font-weight: 500; width: auto; display: inline-block;">
+                        Forgot Password?
+                    </button>
+                </div>
+                
+                <div class="nav-link-btn" onclick="switchView('view-register')">Create an Account / Register</div>
+                <div class="nav-link-btn" style="background: #f8fafc;" onclick="switchView('view-admin-login')">Go to Admin Portal</div>
+            </div>
+        </div>
+    </div>
+
     <!-- VIEW: GENERAL PUBLIC REGISTRATION -->
     <div id="view-register" class="page-view">
         <div class="auth-wrapper">
@@ -391,7 +415,6 @@ footer {
                         <span>Candidate A Tally:</span>
                         <strong class="vote-count" id="countA">0 votes</strong>
                     </div>
-                    <!-- Upgraded to native direct device file upload selection -->
                     <div class="file-upload-wrapper">
                         <button style="padding: 5px 10px; font-size:12px; background: #22c55e;">Upload New Candidate A Photo</button>
                         <input type="file" accept="image/*" onchange="triggerDirectCandidateUpload(this, 'Candidate A')">
@@ -730,7 +753,8 @@ function logout() {
     document.getElementById('loginPass').value = "";
     switchView('view-login');
 }
-    // Toggle Visibility Elements
+
+// Toggle Visibility Elements
 document.getElementById('forgotPasswordLink').addEventListener('click', (e) => {
     e.preventDefault();
     document.getElementById('recoveryModal').style.display = 'flex';
