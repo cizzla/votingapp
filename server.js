@@ -1,411 +1,278 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meru University Digital Electoral Management Platform</title>
-    <style>
-        :root {
-            --bg-main: #f8fafc;
-            --panel-color: #ffffff;
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
-            --teal-primary: #0f766e;
-            --teal-hover: #115e59;
-            --border-grey: #e2e8f0;
-            --error-red: #b91c1c;
-            --success-green: #16a34a;
-        }
+/**
+ * MERU UNIVERSITY DIGITAL ELECTORAL MANAGEMENT PLATFORM
+ * Core Unified Operations Platform Server Infrastructure
+ * Technologies: Node.js, Express.js, Neon Serverless PostgreSQL, JWT Authentication
+ */
 
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-        }
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const { Pool } = require('pg');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-dark);
-            line-height: 1.6;
-            padding-bottom: 4rem;
-        }
+// Load environment variables with fallback configuration profiles
+require('dotenv').config();
 
-        .app-header {
-            background-color: var(--text-dark);
-            color: white;
-            padding: 1.5rem 1rem;
-            border-bottom: 4px solid var(--teal-primary);
-        }
+const app = express();
+const PORT = process.env.PORT || 10000;
 
-        .header-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+// Token Config validation checks
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback_high_entropy_meru_cryptographic_ecdsa_key_string';
+const SYSTEM_BLINDING_SECRET = process.env.SYSTEM_BLINDING_SECRET || 'fallback_voter_ballot_decoupling_salt_hash';
 
-        .header-container h1 {
-            font-size: 1.4pt;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+// ==========================================
+// DATABASE LAYER (NEON CONNECTION POOL)
+// ==========================================
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: true,
+  },
+});
 
-        #user-display {
-            font-size: 9.5pt;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.4rem 0.8rem;
-            border-radius: 4px;
-        }
+// Test connection pooling status on initialization
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('Critical Database connection failure to Neon infrastructure:', err.stack);
+  } else {
+    console.log('Secure SSL connection established with Neon PostgreSQL at:', res.rows[0].now);
+  }
+});
 
-        .app-container {
-            max-width: 900px;
-            margin: 2.5rem auto;
-            padding: 0 1rem;
-        }
+// ==========================================
+// MIDDLEWARE CONFIGURATIONS
+// ==========================================
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-        .card {
-            background: var(--panel-color);
-            border: 1px solid var(--border-grey);
-            border-radius: 8px;
-            padding: 2.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            margin-bottom: 2rem;
-        }
+/**
+ * Zero-Trust Identity Verification Middleware
+ * Validates down-stream access eligibility via signed Http Bearer JWT tokens
+ */
+const verifyToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-        .card h2 {
-            font-size: 14pt;
-            color: var(--text-dark);
-            margin-bottom: 1.5rem;
-            border-left: 4px solid var(--teal-primary);
-            padding-left: 10px;
-        }
+  if (!token) {
+    return res.status(401).json({ error: 'Access token tracking identity missing' });
+  }
 
-        .form-group { 
-            margin-bottom: 1.5rem; 
-        }
+  try {
+    const verified = jwt.verify(token, JWT_SECRET);
+    req.user = verified;
+    next();
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid or expired cryptographic authentication token' });
+  }
+};
 
-        label { 
-            display: block; 
-            margin-bottom: 0.5rem; 
-            font-weight: 600; 
-            font-size: 9.5pt;
-            text-transform: uppercase;
-            color: var(--text-muted);
-        }
+// ==========================================
+// ENDPOINT IMPLEMENTATIONS (REST API LEDGER)
+// ==========================================
 
-        input { 
-            width: 100%; 
-            padding: 0.85rem; 
-            border: 1px solid var(--border-grey); 
-            border-radius: 4px; 
-            font-size: 1rem;
-            background: #fdfdfd;
-        }
+/**
+ * AUTHENTICATION SERVICE: Student Identity Management Login Gate
+ * POST /api/v1/auth/login
+ */
+app.post('/api/v1/auth/login', async (req, res) => {
+  const { student_id, password } = req.body;
 
-        input:focus {
-            outline: none;
-            border-color: var(--teal-primary);
-            background: #ffffff;
-        }
+  if (!student_id || !password) {
+    return res.status(400).json({ error: 'Missing registration identity or security password parameters' });
+  }
 
-        .btn {
-            display: inline-block;
-            padding: 0.85rem 1.5rem;
-            font-size: 1rem;
-            font-weight: 600;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: background 0.2s;
-        }
+  try {
+    const result = await pool.query('SELECT * FROM students WHERE student_id = $1', [student_id]);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid identifier or security credentials' });
+    }
 
-        .btn-primary { 
-            background-color: var(--teal-primary); 
-            color: white; 
-        }
+    const student = result.rows[0];
 
-        .btn-primary:hover { 
-            background-color: var(--teal-hover); 
-        }
+    if (!student.is_active_enrollment) {
+      return res.status(403).json({ error: 'Academic enrollment state suspended or inactive' });
+    }
 
-        .btn-success { 
-            background-color: var(--success-green); 
-            color: white; 
-        }
+    const isMatch = await bcrypt.compare(password, student.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid identifier or security credentials' });
+    }
 
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
+    // Sign identity parameters into access token container
+    const accessToken = jwt.sign(
+      { student_id: student.student_id, faculty_code: student.faculty_code },
+      JWT_SECRET,
+      { expiresIn: '15m' }
+    );
 
-        .selection-card {
-            border: 2px solid var(--border-grey);
-            padding: 1.25rem;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: #fff;
-        }
+    return res.status(200).json({
+      status: 'SUCCESS',
+      access_token: accessToken,
+      profile: {
+        student_id: student.student_id,
+        faculty_code: student.faculty_code,
+        has_voted: student.has_voted_active_session
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Internal Identity Management processing error' });
+  }
+});
 
-        .selection-card:hover {
-            border-color: var(--text-muted);
-            background: #fcfcfc;
-        }
+/**
+ * ELECTION SERVICE: Active Configurations Extraction
+ * GET /api/v1/elections/active
+ */
+app.get('/api/v1/elections/active', verifyToken, async (req, res) => {
+  try {
+    const queryText = `
+      SELECT election_id, title, start_timestamp, end_timestamp, electoral_status 
+      FROM elections 
+      WHERE electoral_status = 'ACTIVE' AND NOW() BETWEEN start_timestamp AND end_timestamp
+    `;
+    const { rows } = await pool.query(queryText);
+    return res.status(200).json(rows);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to extract active configuration parameters' });
+  }
+});
 
-        .selection-card.selected {
-            border-color: var(--teal-primary);
-            background-color: #f0fdfa;
-        }
+/**
+ * CANDIDATE SERVICE: Fetch Vetted Profiles by Election Scope
+ * GET /api/v1/elections/:electionId/candidates
+ */
+app.get('/api/v1/elections/:electionId/candidates', verifyToken, async (req, res) => {
+  const { electionId } = req.params;
+  try {
+    const queryText = `
+      SELECT c.candidate_id, c.candidate_hash, c.manifesto, s.faculty_code
+      FROM candidates c
+      JOIN students s ON c.student_id = s.student_id
+      WHERE c.election_id = $1 AND c.vetting_status = 'APPROVED'
+    `;
+    const { rows } = await pool.query(queryText, [electionId]);
+    return res.status(200).json(rows);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to map candidate lifecycle records' });
+  }
+});
 
-        .ballot-container {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px dashed var(--border-grey);
-        }
+/**
+ * VOTING SERVICE: Real-Time Vote Processing (Identity Separation Guard Point)
+ * POST /api/v1/votes/cast
+ */
+app.post('/api/v1/votes/cast', verifyToken, async (req, res) => {
+  const { election_id, candidate_hash, blind_signature } = req.body;
+  const student_id = req.user.student_id; 
 
-        .ballot-container h3 {
-            font-size: 11.5pt;
-            color: var(--teal-primary);
-            margin-bottom: 0.5rem;
-        }
+  if (!election_id || !candidate_hash || !blind_signature) {
+    return res.status(400).json({ error: 'Missing strict vote registration metadata parameters' });
+  }
 
-        .hidden { 
-            display: none !important; 
-        }
+  const client = await pool.connect();
 
-        .error { 
-            color: var(--error-red); 
-            margin-top: 1rem; 
-            font-weight: 600; 
-            font-size: 9.5pt;
-        }
+  try {
+    await client.query('BEGIN');
 
-        .status-msg {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 9.5pt;
-            word-break: break-all;
-        }
+    // Enforce voter identity double-voting boundaries
+    const voterCheck = await client.query(
+      'SELECT has_voted_active_session, is_active_enrollment FROM students WHERE student_id = $1 FOR UPDATE',
+      [student_id]
+    );
 
-        blockquote {
-            font-style: italic;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-            padding-left: 0.75rem;
-            border-left: 2px solid var(--border-grey);
-        }
-    </style>
-    <meta name="theme-color" content="#0f172a">
-</head>
-<body>
+    const voter = voterCheck.rows[0];
+    if (!voter || !voter.is_active_enrollment) {
+      throw new Error('Voter enrollment records invalid or barred');
+    }
+    if (voter.has_voted_active_session) {
+      return res.status(403).json({ error: 'Electoral integrity infraction: Vote already committed for this session' });
+    }
 
-    <header class="app-header">
-        <div class="header-container">
-            <h1>Meru University Operations Command</h1>
-            <span id="user-display" class="hidden">Voter Context: <strong id="voter-id-label"></strong></span>
-        </div>
-    </header>
+    // Verify operational timeline windows
+    const electionCheck = await client.query(
+      'SELECT electoral_status FROM elections WHERE election_id = $1 AND NOW() BETWEEN start_timestamp AND end_timestamp',
+      [election_id]
+    );
+    if (electionCheck.rows.length === 0) {
+      throw new Error('Target election window closed or uninitialized');
+    }
 
-    <main class="app-container">
-        
-        <section id="auth-section" class="card">
-            <h2>Identity Verification Gate</h2>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="student_id">University Registration ID</label>
-                    <input type="text" id="student_id" required placeholder="e.g., STU101">
-                </div>
-                <div class="form-group">
-                    <label for="password">Security Access Key</label>
-                    <input type="password" id="password" required placeholder="••••••••">
-                </div>
-                <button type="submit" class="btn btn-primary">Verify Credentials</button>
-            </form>
-            <p id="auth-error" class="error hidden"></p>
-        </section>
+    // Mutate state variable on identity table BEFORE processing the ballot injection
+    await client.query(
+      'UPDATE students SET has_voted_active_session = TRUE WHERE student_id = $1',
+      [student_id]
+    );
 
-        <section id="dashboard-section" class="card hidden">
-            <h2>Active Electoral Windows</h2>
-            <p style="color: var(--text-muted); margin-bottom: 1rem;">Select an open parameter loop below to configure your ballot configuration.</p>
-            <div id="elections-list" class="grid-container"></div>
-            
-            <div id="ballot-box" class="ballot-container hidden">
-                <h3>Secure Digital Ballot</h3>
-                <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 9.5pt;">
-                    Select an approved structural asset reference. Your decision is decoupled inside the database tracking ledger using system blind signatures.
-                </p>
-                <div id="candidates-container"></div>
-                <button id="submit-ballot-btn" class="btn btn-success" style="margin-top: 1.5rem;">Commit Encrypted Ballot</button>
-            </div>
-            
-            <div id="dashboard-status" class="status-msg hidden"></div>
-        </section>
-    </main>
+    // Cryptographic Blockchain Ledger Pattern Simulation: Pull trailing hash run
+    const lastBallot = await client.query(
+      'SELECT previous_block_hash FROM ballots ORDER BY ledger_sequence_number DESC LIMIT 1'
+    );
+    
+    let previousHash = '0000000000000000000000000000000000000000000000000000000000000000';
+    if (lastBallot.rows.length > 0) {
+      previousHash = lastBallot.rows[0].previous_block_hash;
+    }
 
-    <script>
-        let CURRENT_ACCESS_TOKEN = '';
-        let ACTIVE_ELECTION_ID = null;
-        let SELECTED_CANDIDATE_HASH = null;
+    // Generate current transactional validation token 
+    const currentBlockHash = crypto
+      .createHmac('sha256', SYSTEM_BLINDING_SECRET)
+      .update(`${election_id}-${candidate_hash}-${blind_signature}-${previousHash}`)
+      .digest('hex');
 
-        // Core Identity Management Authentication Processing Form Listener
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const student_id = document.getElementById('student_id').value;
-            const password = document.getElementById('password').value;
-            const errorLabel = document.getElementById('auth-error');
-            errorLabel.classList.add('hidden');
+    // Execution Separation Point: Write completely decoupled record tracking ledger data
+    await client.query(
+      'INSERT INTO ballots (election_id, candidate_identifier_hash, previous_block_hash) VALUES ($1, $2, $3)',
+      [election_id, candidate_hash, currentBlockHash]
+    );
 
-            try {
-                const response = await fetch('/api/v1/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ student_id, password })
-                });
-                const data = await response.json();
+    await client.query('COMMIT');
+    return res.status(201).json({ status: 'ACCEPTED', transaction_hash: currentBlockHash });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    return res.status(500).json({ error: err.message || 'Electoral transaction orchestration failure' });
+  } finally {
+    client.release();
+  }
+});
 
-                if (!response.ok) throw new Error(data.error || 'Identity verification checkpoint failed');
+/**
+ * RESULTS SERVICE: Real-Time Vote Processing Calculations
+ * GET /api/v1/votes/realtime
+ */
+app.get('/api/v1/votes/realtime', verifyToken, async (req, res) => {
+  const { electionId } = req.query;
+  if (!electionId) {
+    return res.status(400).json({ error: 'Missing election target parameter query parameters' });
+  }
+  try {
+    const queryText = `
+      SELECT candidate_identifier_hash as candidate, COUNT(*) as tally
+      FROM ballots
+      WHERE election_id = $1
+      GROUP BY candidate_identifier_hash
+      ORDER BY tally DESC
+    `;
+    const { rows } = await pool.query(queryText, [electionId]);
+    return res.status(200).json({ election_id: electionId, data: rows });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to aggregate real-time transaction tallies' });
+  }
+});
 
-                CURRENT_ACCESS_TOKEN = data.access_token;
-                
-                // Orchestrate runtime UI structural context shift
-                document.getElementById('auth-section').classList.add('hidden');
-                document.getElementById('dashboard-section').classList.remove('hidden');
-                document.getElementById('user-display').classList.remove('hidden');
-                document.getElementById('voter-id-label').innerText = data.profile.student_id;
+// Single Page Application client-side routing tracking safety handlers
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-                loadActiveElections();
-            } catch (err) {
-                errorLabel.innerText = err.message;
-                errorLabel.classList.remove('hidden');
-            }
-        });
-
-        // Async Election Configuration Retrieval Strategy
-        async function loadActiveElections() {
-            const listContainer = document.getElementById('elections-list');
-            try {
-                const response = await fetch('/api/v1/elections/active', {
-                    headers: { 'Authorization': `Bearer ${CURRENT_ACCESS_TOKEN}` }
-                });
-                const elections = await response.json();
-
-                if (elections.length === 0) {
-                    listContainer.innerHTML = '<p style="color: var(--text-muted);">No currently active institutional voting sessions are open.</p>';
-                    return;
-                }
-
-                listContainer.innerHTML = elections.map(el => `
-                    <div class="selection-card" onclick="selectElection('${el.election_id}')">
-                        <strong style="color: var(--teal-primary); font-size: 11pt;">${el.title}</strong>
-                        <p style="font-size: 9pt; color: var(--text-muted); margin-top: 0.25rem;">
-                            Session Scope Reference Window: ${new Date(el.end_timestamp).toLocaleString()}
-                        </p>
-                    </div>
-                `).join('');
-            } catch (err) {
-                document.getElementById('dashboard-status').classList.remove('hidden');
-                document.getElementById('dashboard-status').innerText = 'System Error: Failed to load operational electoral configuration loops.';
-            }
-        }
-
-        // Active Candidate Lifecycle Stream Mapping Selector
-        async function selectElection(electionId) {
-            ACTIVE_ELECTION_ID = electionId;
-            SELECTED_CANDIDATE_HASH = null;
-            const candidatesContainer = document.getElementById('candidates-container');
-            document.getElementById('ballot-box').classList.remove('hidden');
-            document.getElementById('dashboard-status').classList.add('hidden');
-
-            try {
-                const response = await fetch(`/api/v1/elections/${electionId}/candidates`, {
-                    headers: { 'Authorization': `Bearer ${CURRENT_ACCESS_TOKEN}` }
-                });
-                const candidates = await response.json();
-
-                if (candidates.length === 0) {
-                    candidatesContainer.innerHTML = '<p style="color: var(--text-muted);">No vetted candidate rosters assigned to this partition.</p>';
-                    return;
-                }
-
-                candidatesContainer.innerHTML = candidates.map(c => `
-                    <div class="selection-card" id="card-${c.candidate_hash}" onclick="selectCandidate('${c.candidate_hash}')">
-                        <span style="font-family: monospace; font-size: 9pt; font-weight: bold;">NODE_REF: ${c.candidate_hash.substring(0, 24)}...</span>
-                        <blockquote>"${c.manifesto}"</blockquote>
-                    </div>
-                `).join('');
-            } catch (err) {
-                candidatesContainer.innerHTML = '<p class="error">Execution Exception: Failed to map candidate records.</p>';
-            }
-        }
-
-        function selectCandidate(candidateHash) {
-            SELECTED_CANDIDATE_HASH = candidateHash;
-            document.querySelectorAll('#candidates-container .selection-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            document.getElementById(`card-${candidateHash}`).classList.add('selected');
-        }
-
-        // Decoupled Voting Service Transmission Handler
-        document.getElementById('submit-ballot-btn').addEventListener('click', async () => {
-            if (!ACTIVE_ELECTION_ID || !SELECTED_CANDIDATE_HASH) {
-                alert('Electoral validation error: Choose a candidate asset target first.');
-                return;
-            }
-
-            const statusLabel = document.getElementById('dashboard-status');
-            statusLabel.classList.remove('hidden');
-            statusLabel.style.background = '#f1f5f9';
-            statusLabel.style.color = 'var(--text-dark)';
-            statusLabel.innerText = 'Encrypting state parameters...';
-
-            // Generate high-entropy blind signature component sequence local tracking reference
-            const blind_signature = btoa(Math.random().toString(36).substring(2) + Date.now().toString());
-
-            try {
-                const response = await fetch('/api/v1/votes/cast', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${CURRENT_ACCESS_TOKEN}`
-                    },
-                    body: JSON.stringify({
-                        election_id: ACTIVE_ELECTION_ID,
-                        candidate_hash: SELECTED_CANDIDATE_HASH,
-                        blind_signature: blind_signature
-                    })
-                });
-                const data = await response.json();
-
-                if (!response.ok) throw new Error(data.error || 'Transactional submission rejected by gateway rules engine');
-
-                // Clear structural presentation nodes on transaction completion
-                document.getElementById('ballot-box').classList.add('hidden');
-                document.getElementById('elections-list').innerHTML = '';
-                statusLabel.style.background = '#f0fdfa';
-                statusLabel.style.color = 'var(--teal-primary)';
-                statusLabel.innerHTML = `
-                    <strong>Transaction Executed & Sealed Successfully!</strong><br>
-                    <span style="font-size: 8.5pt; color: var(--text-dark);">
-                        Voter identity state flags cleared. Ledger cryptographic sequence chain receipt block signature index hash reference:
-                    </span><br>
-                    <code style="font-size: 8.5pt; font-weight: bold; color: var(--teal-hover);">${data.transaction_hash}</code>
-                `;
-            } catch (err) {
-                statusLabel.style.background = '#fdf2f2';
-                statusLabel.style.color = 'var(--error-red)';
-                statusLabel.innerText = `Submission Error: ${err.message}`;
-            }
-        });
-    </script>
-</body>
-</html>
+// Start application runtime orchestration layer
+app.listen(PORT, () => {
+  console.log(`Meru University Unified Operations Framework live on cluster port: ${PORT}`);
+});
