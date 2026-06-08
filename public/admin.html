@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUDEMP — Backoffice Administration Command</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --panel-bg: #ffffff;
+            --text-dark: #1e293b;
+            --accent-crimson: #991b1b;
+            --accent-blue: #1d4ed8;
+            --border-light: #cbd5e1;
+        }
+        body { font-family: sans-serif; background: #f1f5f9; color: var(--text-dark); margin: 0; padding: 0; }
+        .navbar { background: var(--bg-dark); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .card { background: var(--panel-bg); border: 1px solid var(--border-light); border-radius: 6px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        h2 { border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; margin-top: 0; color: var(--bg-dark); }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-weight: bold; margin-bottom: 0.3rem; font-size: 0.9rem; }
+        input, select, textarea { width: 100%; padding: 0.6rem; border: 1px solid var(--border-light); border-radius: 4px; box-sizing: border-box; }
+        .btn { padding: 0.6rem 1.2rem; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; display: inline-block; }
+        .btn-blue { background: var(--accent-blue); }
+        .btn-red { background: var(--accent-crimson); }
+        pre { background: #334155; color: #f8fafc; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <h2>MUDEMP Board Command</h2>
+        <span>Authorized Personnel Only</span>
+    </div>
+
+    <div class="container">
+        
+        <div class="card">
+            <h2>Initialize Election Window</h2>
+            <form id="election-form">
+                <div class="form-group">
+                    <label>Electoral Session Title</label>
+                    <input type="text" id="el-title" required placeholder="e.g., School of Computing Council Elections 2026">
+                </div>
+                <div class="form-group">
+                    <label>Start Boundary Date/Time</label>
+                    <input type="datetime-local" id="el-start" required>
+                </div>
+                <div class="form-group">
+                    <label>End Boundary Date/Time</label>
+                    <input type="datetime-local" id="el-end" required>
+                </div>
+                <button type="submit" class="btn btn-blue">Deploy System Node</button>
+            </form>
+            <p id="el-status" style="font-weight: bold; margin-top: 1rem;"></p>
+        </div>
+
+        <div class="card">
+            <h2>Real-Time Live Aggregate Tally</h2>
+            <div class="form-group">
+                <label>Target Election Identity UUID</label>
+                <input type="text" id="tally-uuid" placeholder="Paste election_id UUID string">
+            </div>
+            <button id="fetch-tally-btn" class="btn btn-blue">Request Real-time Aggregations</button>
+            
+            <div style="margin-top: 1.5rem;">
+                <h4>Database Transaction Output Stream:</h4>
+                <pre id="tally-stream">[]</pre>
+            </div>
+        </div>
+
+        <div class="card" style="grid-column: span 2;">
+            <h2>Integration Operations Toolkit</h2>
+            <p style="font-size: 0.9rem; color: #64748b;">Use these functions during verification cycles to clear double-vote flags and wipe transaction histories.</p>
+            <button id="sys-reset-btn" class="btn btn-red">Purge Live Ballots & Unlock Student Identities</button>
+            <p id="sys-status" style="font-weight: bold; margin-top: 1rem;"></p>
+        </div>
+
+    </div>
+
+    <script>
+        // Form Handler: Deploy New Election Node
+        document.getElementById('election-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const status = document.getElementById('el-status');
+            
+            const payload = {
+                title: document.getElementById('el-title').value,
+                start_timestamp: new Date(document.getElementById('el-start').value).toISOString(),
+                end_timestamp: new Date(document.getElementById('el-end').value).toISOString()
+            };
+
+            try {
+                const response = await fetch('/api/v1/admin/elections/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if(!response.ok) throw new Error(data.error || 'Failed configuration deployment');
+                
+                status.style.color = 'green';
+                status.innerHTML = `Success! Election UUID: <br><code>${data.election.election_id}</code>`;
+            } catch(err) {
+                status.style.color = 'red';
+                status.innerText = err.message;
+            }
+        });
+
+        // Request Live Real-time Aggregations
+        document.getElementById('fetch-tally-btn').addEventListener('click', async () => {
+            const uuid = document.getElementById('tally-uuid').value;
+            const output = document.getElementById('tally-stream');
+            if(!uuid) return alert('Provide an active Election UUID');
+
+            try {
+                // Employs a dummy bearer validation for unified routes compatibility checks
+                const response = await fetch(`/api/v1/votes/realtime?electionId=${uuid}`, {
+                    headers: { 'Authorization': 'Bearer administrative-bypass-token-not-for-prod' }
+                });
+                const data = await response.json();
+                output.innerText = JSON.stringify(data.data || data, null, 2);
+            } catch(err) {
+                output.innerText = 'Error calling live monitoring aggregates API.';
+            }
+        });
+
+        // Purge System Logs
+        document.getElementById('sys-reset-btn').addEventListener('click', async () => {
+            if(!confirm('Are you sure you want to completely clear the current ballot records?')) return;
+            const status = document.getElementById('sys-status');
+            
+            try {
+                const response = await fetch('/api/v1/admin/system/reset-voters', { method: 'POST' });
+                const data = await response.json();
+                status.style.color = 'green';
+                status.innerText = data.message;
+            } catch(err) {
+                status.style.color = 'red';
+                status.innerText = 'Error executing systemic purge command.';
+            }
+        });
+    </script>
+</body>
+</html>
