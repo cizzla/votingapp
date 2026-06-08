@@ -267,6 +267,84 @@ app.get('/api/v1/votes/realtime', verifyToken, async (req, res) => {
   }
 });
 
+// =========================================================================
+// ADMINISTRATIVE OPERATION EXTENSIONS (MERU ELECTORAL COMMISSION)
+// =========================================================================
+
+/**
+ * ADMIN SERVICE: Initialize a New Electoral Configuration Loop
+ * POST /api/v1/admin/elections/create
+ */
+app.post('/api/v1/admin/elections/create', async (req, res) => {
+  const { title, start_timestamp, end_timestamp } = req.body;
+  
+  if (!title || !start_timestamp || !end_timestamp) {
+    return res.status(400).json({ error: 'Missing core configuration timeline parameters' });
+  }
+
+  try {
+    const queryText = `
+      INSERT INTO elections (title, start_timestamp, end_timestamp, electoral_status)
+      VALUES ($1, $2, $3, 'ACTIVE') RETURNING election_id, title, electoral_status
+    `;
+    const { rows } = await pool.query(queryText, [title, start_timestamp, end_timestamp]);
+    return res.status(201).json({ status: 'CREATED', election: rows[0] });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to insert structural election configuration loop' });
+  }
+});
+
+/**
+ * ADMIN SERVICE: Candidate Vetting Workflow Status Mutation
+ * PATCH /api/v1/admin/candidates/vet
+ */
+app.patch('/api/v1/admin/candidates/vet', async (req, res) => {
+  const { candidate_id, vetting_status } = req.body;
+  
+  if (!candidate_id || !vetting_status) {
+    return res.status(400).json({ error: 'Missing validation tracking metadata parameters' });
+  }
+
+  try {
+    const queryText = `
+      UPDATE candidates 
+      SET vetting_status = $1 
+      WHERE candidate_id = $2 
+      RETURNING candidate_id, vetting_status
+    `;
+    const { rows } = await pool.query(queryText, [vetting_status, candidate_id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Target candidate profile node reference not found' });
+    }
+    
+    return res.status(200).json({ status: 'MUTATED', candidate: rows[0] });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Failed to update candidate lifecycle vetting records' });
+  }
+});
+
+/**
+ * SYSTEM SERVICE: Global Reset / Purge Safe-Gate (For Testing Cycles)
+ * POST /api/v1/admin/system/reset-voters
+ */
+app.post('/api/v1/admin/system/reset-voters', async (req, res) => {
+  try {
+    await pool.query('UPDATE students SET has_voted_active_session = FALSE');
+    await pool.query('TRUNCATE TABLE ballots RESTART IDENTITY');
+    return res.status(200).json({ status: 'RESET_COMPLETED', message: 'Identity gates cleared and ledger reset.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'System infrastructure purge failed' });
+  }
+});
+
+// ==========================================
+// FALLBACK SPA HANDLER & INITIALIZATION
+// ==========================================
+
 // Single Page Application client-side routing tracking safety handlers
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
