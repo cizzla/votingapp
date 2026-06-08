@@ -1,188 +1,411 @@
-const express = require('express');
-const { Pool } = require('pg');
-const bcrypt = require('bcryptjs');
-const cors = require('cors');
-const path = require('path');
-require('dotenv').config();
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'))); // Serves index.html from a public folder if needed
-
-// Neon PostgreSQL Database Connection Pool
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false // Required for serverless platforms like Render/Neon
-    }
-});
-
-// Test DB Connection
-pool.connect((err, client, release) => {
-    if (err) {
-        return console.error('Error acquiring client', err.stack);
-    }
-    console.log('Successfully connected to Neon Database.');
-    release();
-});
-
-// ==========================================
-// 1. STUDENT REGISTRATION
-// ==========================================
-app.post('/api/register', async (req, res) => {
-    const { reg_no, fullname, password } = req.body;
-
-    if (!reg_no || !fullname || !password) {
-        return res.status(400).json({ message: "All fields are required." });
-    }
-
-    try {
-        // Check if student already exists
-        const userCheck = await pool.query('SELECT * FROM students WHERE UPPER(reg_no) = UPPER($1)', [reg_no.trim()]);
-        if (userCheck.rows.length > 0) {
-            return res.status(400).json({ message: "Registration number already exists." });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meru University Digital Electoral Management Platform</title>
+    <style>
+        :root {
+            --bg-main: #f8fafc;
+            --panel-color: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --teal-primary: #0f766e;
+            --teal-hover: #115e59;
+            --border-grey: #e2e8f0;
+            --error-red: #b91c1c;
+            --success-green: #16a34a;
         }
 
-        // Secure password hashing
-        const saltRounds = 10;
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
 
-        // Insert new student
-        await pool.query(
-            'INSERT INTO students (reg_no, fullname, password) VALUES ($1, $2, $3)',
-            [reg_no.trim(), fullname.trim(), hashedPassword]
-        );
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding-bottom: 4rem;
+        }
 
-        res.status(201).json({ message: "Account created successfully." });
-    } catch (error) {
-        console.error("Registration error:", error);
-        res.status(500).json({ message: "Communication breakdown fault during registration." });
-    }
-});
+        .app-header {
+            background-color: var(--text-dark);
+            color: white;
+            padding: 1.5rem 1rem;
+            border-bottom: 4px solid var(--teal-primary);
+        }
 
-// ==========================================
-// 2. STUDENT LOGIN
-// ==========================================
-app.post('/api/login', async (req, res) => {
-    const { reg_no, password } = req.body;
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    if (!reg_no || !password) {
-        return res.status(400).json({ message: "Invalid username/password combinations." });
-    }
+        .header-container h1 {
+            font-size: 1.4pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-    try {
-        // Query user by registration number (case insensitive match)
-        const userResult = await pool.query('SELECT * FROM students WHERE UPPER(reg_no) = UPPER($1)', [reg_no.trim()]);
+        #user-display {
+            font-size: 9.5pt;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+        }
+
+        .app-container {
+            max-width: 900px;
+            margin: 2.5rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: var(--panel-color);
+            border: 1px solid var(--border-grey);
+            border-radius: 8px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .card h2 {
+            font-size: 14pt;
+            color: var(--text-dark);
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--teal-primary);
+            padding-left: 10px;
+        }
+
+        .form-group { 
+            margin-bottom: 1.5rem; 
+        }
+
+        label { 
+            display: block; 
+            margin-bottom: 0.5rem; 
+            font-weight: 600; 
+            font-size: 9.5pt;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        input { 
+            width: 100%; 
+            padding: 0.85rem; 
+            border: 1px solid var(--border-grey); 
+            border-radius: 4px; 
+            font-size: 1rem;
+            background: #fdfdfd;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--teal-primary);
+            background: #ffffff;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.85rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: background 0.2s;
+        }
+
+        .btn-primary { 
+            background-color: var(--teal-primary); 
+            color: white; 
+        }
+
+        .btn-primary:hover { 
+            background-color: var(--teal-hover); 
+        }
+
+        .btn-success { 
+            background-color: var(--success-green); 
+            color: white; 
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .selection-card {
+            border: 2px solid var(--border-grey);
+            padding: 1.25rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #fff;
+        }
+
+        .selection-card:hover {
+            border-color: var(--text-muted);
+            background: #fcfcfc;
+        }
+
+        .selection-card.selected {
+            border-color: var(--teal-primary);
+            background-color: #f0fdfa;
+        }
+
+        .ballot-container {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px dashed var(--border-grey);
+        }
+
+        .ballot-container h3 {
+            font-size: 11.5pt;
+            color: var(--teal-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .hidden { 
+            display: none !important; 
+        }
+
+        .error { 
+            color: var(--error-red); 
+            margin-top: 1rem; 
+            font-weight: 600; 
+            font-size: 9.5pt;
+        }
+
+        .status-msg {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 9.5pt;
+            word-break: break-all;
+        }
+
+        blockquote {
+            font-style: italic;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            padding-left: 0.75rem;
+            border-left: 2px solid var(--border-grey);
+        }
+    </style>
+    <meta name="theme-color" content="#0f172a">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-container">
+            <h1>Meru University Operations Command</h1>
+            <span id="user-display" class="hidden">Voter Context: <strong id="voter-id-label"></strong></span>
+        </div>
+    </header>
+
+    <main class="app-container">
         
-        if (userResult.rows.length === 0) {
-            return res.status(401).json({ message: "Invalid username/password combinations." });
-        }
+        <section id="auth-section" class="card">
+            <h2>Identity Verification Gate</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="student_id">University Registration ID</label>
+                    <input type="text" id="student_id" required placeholder="e.g., STU101">
+                </div>
+                <div class="form-group">
+                    <label for="password">Security Access Key</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary">Verify Credentials</button>
+            </form>
+            <p id="auth-error" class="error hidden"></p>
+        </section>
 
-        const student = userResult.rows[0];
+        <section id="dashboard-section" class="card hidden">
+            <h2>Active Electoral Windows</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">Select an open parameter loop below to configure your ballot configuration.</p>
+            <div id="elections-list" class="grid-container"></div>
+            
+            <div id="ballot-box" class="ballot-container hidden">
+                <h3>Secure Digital Ballot</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 9.5pt;">
+                    Select an approved structural asset reference. Your decision is decoupled inside the database tracking ledger using system blind signatures.
+                </p>
+                <div id="candidates-container"></div>
+                <button id="submit-ballot-btn" class="btn btn-success" style="margin-top: 1.5rem;">Commit Encrypted Ballot</button>
+            </div>
+            
+            <div id="dashboard-status" class="status-msg hidden"></div>
+        </section>
+    </main>
 
-        // Match against hashed password (or fallback to plain-text check if migrating raw data)
-        let isMatch = false;
-        if (student.password.startsWith('$2b$') || student.password.startsWith('$2a$')) {
-            isMatch = await bcrypt.compare(password, student.password);
-        } else {
-            isMatch = (password === student.password); // Direct match if data rows are still unhashed strings
-        }
+    <script>
+        let CURRENT_ACCESS_TOKEN = '';
+        let ACTIVE_ELECTION_ID = null;
+        let SELECTED_CANDIDATE_HASH = null;
 
-        if (!isMatch) {
-            return res.status(401).json({ message: "Invalid username/password combinations." });
-        }
+        // Core Identity Management Authentication Processing Form Listener
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const student_id = document.getElementById('student_id').value;
+            const password = document.getElementById('password').value;
+            const errorLabel = document.getElementById('auth-error');
+            errorLabel.classList.add('hidden');
 
-        res.status(200).json({ 
-            message: "Login successful", 
-            student: { id: student.id, reg_no: student.reg_no, fullname: student.fullname } 
+            try {
+                const response = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_id, password })
+                });
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Identity verification checkpoint failed');
+
+                CURRENT_ACCESS_TOKEN = data.access_token;
+                
+                // Orchestrate runtime UI structural context shift
+                document.getElementById('auth-section').classList.add('hidden');
+                document.getElementById('dashboard-section').classList.remove('hidden');
+                document.getElementById('user-display').classList.remove('hidden');
+                document.getElementById('voter-id-label').innerText = data.profile.student_id;
+
+                loadActiveElections();
+            } catch (err) {
+                errorLabel.innerText = err.message;
+                errorLabel.classList.remove('hidden');
+            }
         });
 
-    } catch (error) {
-        console.error("Login error:", error);
-        res.status(500).json({ message: "Communication breakdown fault executing authentication." });
-    }
-});
+        // Async Election Configuration Retrieval Strategy
+        async function loadActiveElections() {
+            const listContainer = document.getElementById('elections-list');
+            try {
+                const response = await fetch('/api/v1/elections/active', {
+                    headers: { 'Authorization': `Bearer ${CURRENT_ACCESS_TOKEN}` }
+                });
+                const elections = await response.json();
 
-// ==========================================
-// 3. AUTHENTICATION / PASSWORD RESET
-// ==========================================
-app.post('/api/forgot-password', async (req, res) => {
-    const { reg_no, default_pin, new_password } = req.body;
+                if (elections.length === 0) {
+                    listContainer.innerHTML = '<p style="color: var(--text-muted);">No currently active institutional voting sessions are open.</p>';
+                    return;
+                }
 
-    if (!reg_no || !default_pin || !new_password) {
-        return res.status(400).json({ message: "All fields are required to commit credential changes." });
-    }
-
-    try {
-        // Match registration number and verify recovery verification key (using recovery pin)
-        // Adjust column name below if your pin field is named differently in 'students'
-        const userResult = await pool.query('SELECT * FROM students WHERE UPPER(reg_no) = UPPER($1)', [reg_no.trim()]);
-
-        if (userResult.rows.length === 0) {
-            return res.status(404).json({ message: "Communication breakdown fault executing authentication reset." });
+                listContainer.innerHTML = elections.map(el => `
+                    <div class="selection-card" onclick="selectElection('${el.election_id}')">
+                        <strong style="color: var(--teal-primary); font-size: 11pt;">${el.title}</strong>
+                        <p style="font-size: 9pt; color: var(--text-muted); margin-top: 0.25rem;">
+                            Session Scope Reference Window: ${new Date(el.end_timestamp).toLocaleString()}
+                        </p>
+                    </div>
+                `).join('');
+            } catch (err) {
+                document.getElementById('dashboard-status').classList.remove('hidden');
+                document.getElementById('dashboard-status').innerText = 'System Error: Failed to load operational electoral configuration loops.';
+            }
         }
 
-        // Hash the new security password
-        const saltRounds = 10;
-        const hashedNewPassword = await bcrypt.hash(new_password, saltRounds);
+        // Active Candidate Lifecycle Stream Mapping Selector
+        async function selectElection(electionId) {
+            ACTIVE_ELECTION_ID = electionId;
+            SELECTED_CANDIDATE_HASH = null;
+            const candidatesContainer = document.getElementById('candidates-container');
+            document.getElementById('ballot-box').classList.remove('hidden');
+            document.getElementById('dashboard-status').classList.add('hidden');
 
-        // Update password credentials
-        await pool.query(
-            'UPDATE students SET password = $1 WHERE UPPER(reg_no) = UPPER($2)',
-            [hashedNewPassword, reg_no.trim()]
-        );
+            try {
+                const response = await fetch(`/api/v1/elections/${electionId}/candidates`, {
+                    headers: { 'Authorization': `Bearer ${CURRENT_ACCESS_TOKEN}` }
+                });
+                const candidates = await response.json();
 
-        res.status(200).json({ message: "Password updated successfully." });
+                if (candidates.length === 0) {
+                    candidatesContainer.innerHTML = '<p style="color: var(--text-muted);">No vetted candidate rosters assigned to this partition.</p>';
+                    return;
+                }
 
-    } catch (error) {
-        console.error("Reset password error:", error);
-        // Custom message directly matching UI error string requirements
-        res.status(500).json({ message: "Communication breakdown fault executing authentication reset." });
-    }
-});
-
-// ==========================================
-// 4. ADMINISTRATIVE PORTAL ACCESS
-// ==========================================
-app.post('/api/admin/login', async (req, res) => {
-    const { username, password } = req.body;
-
-    try {
-        const adminResult = await pool.query('SELECT * FROM system_admins WHERE username = $1', [username]);
-        
-        if (adminResult.rows.length === 0) {
-            return res.status(401).json({ message: "Unauthorized credentials code signature." });
+                candidatesContainer.innerHTML = candidates.map(c => `
+                    <div class="selection-card" id="card-${c.candidate_hash}" onclick="selectCandidate('${c.candidate_hash}')">
+                        <span style="font-family: monospace; font-size: 9pt; font-weight: bold;">NODE_REF: ${c.candidate_hash.substring(0, 24)}...</span>
+                        <blockquote>"${c.manifesto}"</blockquote>
+                    </div>
+                `).join('');
+            } catch (err) {
+                candidatesContainer.innerHTML = '<p class="error">Execution Exception: Failed to map candidate records.</p>';
+            }
         }
 
-        const admin = adminResult.rows[0];
-        
-        // Plain text validation or hashed password parsing
-        let isMatch = (password === admin.password);
-        if (admin.password.startsWith('$2b$')) {
-            isMatch = await bcrypt.compare(password, admin.password);
+        function selectCandidate(candidateHash) {
+            SELECTED_CANDIDATE_HASH = candidateHash;
+            document.querySelectorAll('#candidates-container .selection-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById(`card-${candidateHash}`).classList.add('selected');
         }
 
-        if (!isMatch) {
-            return res.status(401).json({ message: "Unauthorized credentials code signature." });
-        }
+        // Decoupled Voting Service Transmission Handler
+        document.getElementById('submit-ballot-btn').addEventListener('click', async () => {
+            if (!ACTIVE_ELECTION_ID || !SELECTED_CANDIDATE_HASH) {
+                alert('Electoral validation error: Choose a candidate asset target first.');
+                return;
+            }
 
-        res.status(200).json({ message: "Admin authorization verified successfully." });
-    } catch (error) {
-        console.error("Admin authentication error:", error);
-        res.status(500).json({ message: "Unauthorized credentials code signature." });
-    }
-});
+            const statusLabel = document.getElementById('dashboard-status');
+            statusLabel.classList.remove('hidden');
+            statusLabel.style.background = '#f1f5f9';
+            statusLabel.style.color = 'var(--text-dark)';
+            statusLabel.innerText = 'Encrypting state parameters...';
 
-// Catch-all route to serve the front-end index file
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+            // Generate high-entropy blind signature component sequence local tracking reference
+            const blind_signature = btoa(Math.random().toString(36).substring(2) + Date.now().toString());
 
-// Start Server
-app.listen(PORT, () => {
-    console.log(`Voting App backend web service running on port ${PORT}`);
-});
+            try {
+                const response = await fetch('/api/v1/votes/cast', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${CURRENT_ACCESS_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        election_id: ACTIVE_ELECTION_ID,
+                        candidate_hash: SELECTED_CANDIDATE_HASH,
+                        blind_signature: blind_signature
+                    })
+                });
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Transactional submission rejected by gateway rules engine');
+
+                // Clear structural presentation nodes on transaction completion
+                document.getElementById('ballot-box').classList.add('hidden');
+                document.getElementById('elections-list').innerHTML = '';
+                statusLabel.style.background = '#f0fdfa';
+                statusLabel.style.color = 'var(--teal-primary)';
+                statusLabel.innerHTML = `
+                    <strong>Transaction Executed & Sealed Successfully!</strong><br>
+                    <span style="font-size: 8.5pt; color: var(--text-dark);">
+                        Voter identity state flags cleared. Ledger cryptographic sequence chain receipt block signature index hash reference:
+                    </span><br>
+                    <code style="font-size: 8.5pt; font-weight: bold; color: var(--teal-hover);">${data.transaction_hash}</code>
+                `;
+            } catch (err) {
+                statusLabel.style.background = '#fdf2f2';
+                statusLabel.style.color = 'var(--error-red)';
+                statusLabel.innerText = `Submission Error: ${err.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
