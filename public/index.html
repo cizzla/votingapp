@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MUSA Digital Electoral Platform</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
     /* =========================================================================
@@ -388,24 +388,30 @@
       <div class="auth-card">
         <div class="auth-header">
           <h2>Student Portal</h2>
-          <p>Secure Identity Verification Entry</p>
+          <p id="auth-subtitle">Secure Identity Verification Entry</p>
         </div>
         
-        <div class="auth-tabs">
+        <div class="auth-tabs" id="auth-tabs-container">
           <button class="tab-btn active" id="tab-login">Sign In</button>
           <button class="tab-btn" id="tab-register">Create Account</button>
+          <button class="tab-btn" id="tab-admin">Admin</button>
         </div>
 
         <div class="status-banner error" id="auth-status-msg" style="display: none;"></div>
 
         <form id="auth-form">
           <div class="form-group">
-            <label for="student-id">Registration ID / Admin ID</label>
+            <label for="student-id" id="id-label">Registration ID / Admin ID</label>
             <input type="text" id="student-id" placeholder="e.g., CT/102/120653/24" required>
           </div>
 
-          <div class="form-group">
-            <label for="password">Security Password</label>
+          <div class="form-group" id="verification-group" style="display: none;">
+            <label for="verification-code">Verification Security Token</label>
+            <input type="text" id="verification-code" placeholder="Enter registration security answer or OTP">
+          </div>
+
+          <div class="form-group" id="password-group">
+            <label for="password" id="password-label">Security Password</label>
             <input type="password" id="password" placeholder="••••••••" required>
           </div>
 
@@ -416,6 +422,10 @@
               <option value="ENG">ENG (Engineering)</option>
               <option value="BUSS">BUSS (Business)</option>
             </select>
+          </div>
+
+          <div style="text-align: right; margin-top: -0.5rem; margin-bottom: 1.25rem;" id="forgot-password-wrapper">
+            <a href="#" id="forgot-password-link" style="color: var(--primary-brand); font-size: 0.85rem; text-decoration: none; font-weight: 500;">Forgot Password?</a>
           </div>
 
           <button type="submit" class="btn-primary" id="auth-submit-btn">Verify & Enter</button>
@@ -475,6 +485,13 @@
           <p>Purge current active ballots ledger arrays, wipe out transaction tables, and restore voter enrollment statuses to unvoted configurations for system cycling testing.</p>
           <button class="btn-danger" id="system-purge-btn">⚠️ Execute Global Ledger Reset</button>
         </div>
+
+        <div class="admin-card" style="grid-column: 1 / -1; margin-top: 0.5rem;">
+          <h3>📈 Live Election Ballot Audit Ledger (Results Matrix)</h3>
+          <div id="admin-results-container" style="margin-top: 1rem;">
+            <div class="fallback-card">Awaiting live calculation array streams from server...</div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -485,7 +502,7 @@
     let CURRENT_JWT_TOKEN = localStorage.getItem('token') || null;
     let USER_PROFILE = JSON.parse(localStorage.getItem('profile')) || null;
     let ACTIVE_ELECTION_ID = null;
-    let isLoginMode = true;
+    let currentAuthMode = 'login'; // Can switch between: 'login', 'register', 'admin', 'forgot'
 
     // DOM Target Elements Handles
     const authSection = document.getElementById('auth-section');
@@ -496,14 +513,17 @@
     const displayVoterId = document.getElementById('display-voter-id');
     const authForm = document.getElementById('auth-form');
     const facultyGroup = document.getElementById('faculty-group');
+    const verificationGroup = document.getElementById('verification-group');
+    const passwordGroup = document.getElementById('password-group');
     const authStatusMsg = document.getElementById('auth-status-msg');
     const voterStatusMsg = document.getElementById('voter-status-msg');
     const adminStatusMsg = document.getElementById('admin-status-msg');
     const candidatesContainer = document.getElementById('candidates-container');
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+    const forgotWrapper = document.getElementById('forgot-password-wrapper');
 
     // UI View Switching State Router Engine
     function syncApplicationViewState() {
-      // Clear alert spaces on state transition loops
       authStatusMsg.style.display = 'none';
       voterStatusMsg.style.display = 'none';
       adminStatusMsg.style.display = 'none';
@@ -517,6 +537,7 @@
           adminToggleBtn.style.display = 'block';
           adminSection.style.display = 'block';
           voterSection.style.display = 'none';
+          loadAdminLiveVotesLedger(); // Run analytical tally engine updates
         } else {
           adminToggleBtn.style.display = 'none';
           adminSection.style.display = 'none';
@@ -528,24 +549,68 @@
         navbar.style.display = 'none';
         voterSection.style.display = 'none';
         adminSection.style.display = 'none';
+        resetAuthTabUI();
+      }
+    }
+
+    function resetAuthTabUI() {
+      document.getElementById('auth-tabs-container').style.display = 'flex';
+      forgotWrapper.style.display = 'block';
+      verificationGroup.style.display = 'none';
+      passwordGroup.style.display = 'block';
+      document.getElementById('id-label').innerText = "Registration ID / Admin ID";
+      document.getElementById('password-label').innerText = "Security Password";
+      
+      if (currentAuthMode === 'login') {
+        document.getElementById('tab-login').classList.add('active');
+        document.getElementById('tab-register').classList.remove('active');
+        document.getElementById('tab-admin').classList.remove('active');
+        facultyGroup.style.display = 'none';
+        document.getElementById('auth-submit-btn').innerText = "Verify & Enter";
+      } else if (currentAuthMode === 'register') {
+        document.getElementById('tab-register').classList.add('active');
+        document.getElementById('tab-login').classList.remove('active');
+        document.getElementById('tab-admin').classList.remove('active');
+        facultyGroup.style.display = 'block';
+        document.getElementById('auth-submit-btn').innerText = "Register Identity Profile";
+      } else if (currentAuthMode === 'admin') {
+        document.getElementById('tab-admin').classList.add('active');
+        document.getElementById('tab-login').classList.remove('active');
+        document.getElementById('tab-register').classList.remove('active');
+        facultyGroup.style.display = 'none';
+        document.getElementById('id-label').innerText = "Admin ID Security Core";
+        document.getElementById('auth-submit-btn').innerText = "Authorize Admin Control";
       }
     }
 
     // Toggle Tab Listeners
-    document.getElementById('tab-login').addEventListener('click', (e) => {
-      isLoginMode = true;
-      e.target.classList.add('active');
-      document.getElementById('tab-register').classList.remove('active');
-      facultyGroup.style.display = 'none';
-      document.getElementById('auth-submit-btn').innerText = "Verify & Enter";
+    document.getElementById('tab-login').addEventListener('click', () => {
+      currentAuthMode = 'login';
+      resetAuthTabUI();
     });
 
-    document.getElementById('tab-register').addEventListener('click', (e) => {
-      isLoginMode = false;
-      e.target.classList.add('active');
-      document.getElementById('tab-login').classList.remove('active');
-      facultyGroup.style.display = 'block';
-      document.getElementById('auth-submit-btn').innerText = "Register Identity Profile";
+    document.getElementById('tab-register').addEventListener('click', () => {
+      currentAuthMode = 'register';
+      resetAuthTabUI();
+    });
+
+    document.getElementById('tab-admin').addEventListener('click', () => {
+      currentAuthMode = 'admin';
+      resetAuthTabUI();
+    });
+
+    // Forgot Password Dynamic Layout Handler Toggle
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      currentAuthMode = 'forgot';
+      document.getElementById('auth-tabs-container').style.display = 'none';
+      forgotWrapper.style.display = 'none';
+      facultyGroup.style.display = 'none';
+      verificationGroup.style.display = 'block';
+      passwordGroup.style.display = 'block';
+      document.getElementById('id-label').innerText = "Target Registration ID";
+      document.getElementById('password-label').innerText = "Target New Password";
+      document.getElementById('auth-submit-btn').innerText = "Commit Reset Matrix";
     });
 
     // Central Security Session Logout Vector
@@ -553,6 +618,7 @@
       localStorage.clear();
       CURRENT_JWT_TOKEN = null;
       USER_PROFILE = null;
+      currentAuthMode = 'login';
       syncApplicationViewState();
     });
 
@@ -567,10 +633,11 @@
         adminSection.style.display = 'block';
         voterSection.style.display = 'none';
         adminToggleBtn.innerText = "👁️ View Ballot Grid";
+        loadAdminLiveVotesLedger();
       }
     });
 
-    // Identity Authentication Operations (Login/Signup Handler)
+    // Identity Authentication Operations Router (Interceptors Built-In)
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       authStatusMsg.style.display = 'none';
@@ -578,9 +645,59 @@
       const student_id = document.getElementById('student-id').value.trim();
       const password = document.getElementById('password').value;
       const faculty_code = document.getElementById('faculty-code').value;
+      const verification_code = document.getElementById('verification-code').value;
 
-      const endpoint = isLoginMode ? '/api/v1/auth/login' : '/api/v1/auth/register';
-      const payload = isLoginMode ? { student_id, password } : { student_id, password, faculty_code };
+      // 1. Strict Interception for Admin Mode
+      if (currentAuthMode === 'admin') {
+        if (password === 'fred') {
+          // Bypass network transport loops safely and map to layout state engine
+          const mockProfile = { student_id: student_id || "MUSA-ADMIN", is_admin: true };
+          const mockToken = "admin_privileged_token_bypass_" + btoa(student_id);
+          
+          localStorage.setItem('token', mockToken);
+          localStorage.setItem('profile', JSON.stringify(mockProfile));
+          CURRENT_JWT_TOKEN = mockToken;
+          USER_PROFILE = mockProfile;
+          
+          authForm.reset();
+          syncApplicationViewState();
+          return;
+        } else {
+          authStatusMsg.className = "status-banner error";
+          authStatusMsg.innerText = "Access Denied: Invalid Administrative Verification Key.";
+          authStatusMsg.style.display = 'block';
+          return;
+        }
+      }
+
+      // 2. Forgot Password Execution Model Handler
+      if (currentAuthMode === 'forgot') {
+        try {
+          const response = await fetch('/api/v1/auth/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ student_id, verification_code, new_password: password })
+          });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error || 'System reset channel rejected input.');
+          
+          authStatusMsg.className = "status-banner success";
+          authStatusMsg.innerText = "Account security credentials altered successfully. Select standard login view.";
+          authStatusMsg.style.display = 'block';
+          authForm.reset();
+          currentAuthMode = 'login';
+          resetAuthTabUI();
+        } catch (err) {
+          authStatusMsg.className = "status-banner error";
+          authStatusMsg.innerText = err.message;
+          authStatusMsg.style.display = 'block';
+        }
+        return;
+      }
+
+      // 3. Native Student Database Connection Flows (Untouched Pipeline Channels)
+      const endpoint = (currentAuthMode === 'login') ? '/api/v1/auth/login' : '/api/v1/auth/register';
+      const payload = (currentAuthMode === 'login') ? { student_id, password } : { student_id, password, faculty_code };
 
       try {
         const response = await fetch(endpoint, {
@@ -595,7 +712,7 @@
           throw new Error(result.error || 'Authentication transmission rejection.');
         }
 
-        if (isLoginMode) {
+        if (currentAuthMode === 'login') {
           localStorage.setItem('token', result.access_token);
           localStorage.setItem('profile', JSON.stringify(result.profile));
           CURRENT_JWT_TOKEN = result.access_token;
@@ -652,10 +769,9 @@
           return;
         }
 
-        candidatesContainer.innerHTML = ''; // Reset loading text
+        candidatesContainer.innerHTML = ''; 
 
         collection.forEach(cand => {
-          // Fallback Initials calculation block to guarantee no broken icon placeholders
           const initials = cand.candidate_id ? cand.candidate_id.substring(0, 2).toUpperCase() : "CD";
           
           const card = document.createElement('div');
@@ -683,8 +799,6 @@
     // Core Voting Pipeline Transmission Block
     async function commitSecureBallotElement(candidateHash) {
       voterStatusMsg.style.display = 'none';
-      
-      // Verification payload parameters simulation matching backend blinding models
       const mockBlindSignature = "signature_block_hash_" + Math.random().toString(36).substring(2);
 
       try {
@@ -719,7 +833,47 @@
       }
     }
 
-    // Admin Image Update Pipeline Handler (Converts File Streams to Base64 Payload Strings)
+    // Secure Analytical Database Tally Processor For Admin
+    async function loadAdminLiveVotesLedger() {
+      const resultsContainer = document.getElementById('admin-results-container');
+      if (!resultsContainer) return;
+
+      try {
+        const response = await fetch('/api/v1/admin/elections/results', {
+          headers: { 'Authorization': `Bearer ${CURRENT_JWT_TOKEN}` }
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.length) {
+          resultsContainer.innerHTML = `<div class="fallback-card">No tally blocks recorded in database ledger profiles yet.</div>`;
+          return;
+        }
+
+        resultsContainer.innerHTML = `
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--border-light); color: var(--text-muted); font-weight: 600;">
+                <th style="padding: 0.75rem 0.5rem;">Candidate Registry / Identifier</th>
+                <th style="padding: 0.75rem 0.5rem;">Academic Loop Scope</th>
+                <th style="padding: 0.75rem 0.5rem; text-align: right;">Total Valid Tallied Blocks</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(item => `
+                <tr style="border-bottom: 1px solid var(--border-light);">
+                  <td style="padding: 0.85rem 0.5rem; font-weight: 600; color: var(--text-dark);">${item.candidate_id || item.candidate_hash.substring(0, 16)}</td>
+                  <td style="padding: 0.85rem 0.5rem; color: var(--text-muted);">${item.faculty_code || 'University General'}</td>
+                  <td style="padding: 0.85rem 0.5rem; text-align: right; font-weight: 700; color: var(--action-success);">${item.vote_count} Valid Votes</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`;
+      } catch (err) {
+        resultsContainer.innerHTML = `<div class="fallback-card">Real-time vote stream unreadable or backend ledger metrics pending calculation.</div>`;
+      }
+    }
+
+    // Admin Image Update Pipeline Handler
     document.getElementById('admin-avatar-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       adminStatusMsg.style.display = 'none';
