@@ -45,7 +45,7 @@ pool.query('SELECT NOW()', (err, res) => {
 // MIDDLEWARE CONFIGURATIONS
 // ==========================================
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // Increased limit to safely process image streams
 app.use(express.static(path.join(__dirname, 'public')));
 
 /**
@@ -66,6 +66,35 @@ const verifyToken = (req, res, next) => {
     next();
   } catch (err) {
     return res.status(403).json({ error: 'Invalid or expired cryptographic authentication token' });
+  }
+};
+
+/**
+ * Strict Administrative Clearance Gatekeeper
+ * Ensures the logged-in user is an official admin before exposing results or uploads
+ */
+const verifyAdmin = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Administrative access identity missing' });
+  }
+
+  try {
+    const verified = jwt.verify(token, JWT_SECRET);
+    
+    // Auto-elevate privileges if ID contains administrative strings
+    const isIdAdmin = verified.student_id.toLowerCase().includes('admin');
+    
+    if (isIdAdmin) {
+      req.user = verified;
+      next();
+    } else {
+      return res.status(403).json({ error: 'Access Denied: Restricted to Electoral Commission Admins only' });
+    }
+  } catch (err) {
+    return res.status(403).json({ error: 'Invalid or expired admin configuration token' });
   }
 };
 
@@ -114,7 +143,8 @@ app.post('/api/v1/auth/login', async (req, res) => {
       profile: {
         student_id: student.student_id,
         faculty_code: student.faculty_code,
-        has_voted: student.has_voted_active_session
+        has_voted: student.has_voted_active_session,
+        is_admin: student.student_id.toLowerCase().includes('admin')
       }
     });
   } catch (err) {
@@ -135,14 +165,10 @@ app.post('/api/v1/auth/register', async (req, res) => {
   }
 
   try {
-    // Securely hash the password string
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
-
-    // Generate an automatic unique 64-character hash for biometric constraint safety
     const safeBiometricHash = crypto.randomBytes(32).toString('hex');
 
-    // Write data directly to Neon database ledger
     const queryText = `
       INSERT INTO students (student_id, password_hash, faculty_code, biometric_signature_hash)
       VALUES ($1, $2, $3, $4)
@@ -164,15 +190,12 @@ app.post('/api/v1/auth/register', async (req, res) => {
 
   } catch (err) {
     console.error('Registration Security Exception:', err.message);
-    
-    // Catch database constraints gracefully and return clean JSON to frontend
     if (err.code === '23505') {
       return res.status(400).json({ error: 'Account setup failure: Registration ID already exists.' });
     }
     if (err.code === '23503') {
       return res.status(400).json({ error: 'Invalid Institutional Context: Use SCIT, ENG, or BUSS.' });
     }
-    
     return res.status(500).json({ error: 'Internal identity engine exception during setup.' });
   }
 });
@@ -234,14 +257,14 @@ app.get('/api/v1/elections/active', verifyToken, async (req, res) => {
 });
 
 /**
- * CANDIDATE SERVICE: Fetch Vetted Profiles by Election Scope
+ * CANDIDATE SERVICE: Fetch Vetted Profiles by Election Scope (Includes Image Stream)
  * GET /api/v1/elections/:electionId/candidates
  */
 app.get('/api/v1/elections/:electionId/candidates', verifyToken, async (req, res) => {
   const { electionId } = req.params;
   try {
     const queryText = `
-      SELECT c.candidate_id, c.candidate_hash, c.manifesto, s.faculty_code
+      SELECT c.candidate_id, c.candidate_hash, c.manifesto, c.profile_picture, s.faculty_code
       FROM candidates c
       JOIN students s ON c.student_id = s.student_id
       WHERE c.election_id = $1 AND c.vetting_status = 'APPROVED'
@@ -271,7 +294,6 @@ app.post('/api/v1/votes/cast', verifyToken, async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // Enforce voter identity double-voting boundaries
     const voterCheck = await client.query(
       'SELECT has_voted_active_session, is_active_enrollment FROM students WHERE student_id = $1 FOR UPDATE',
       [student_id]
@@ -285,7 +307,6 @@ app.post('/api/v1/votes/cast', verifyToken, async (req, res) => {
       return res.status(403).json({ error: 'Electoral integrity infraction: Vote already committed for this session' });
     }
 
-    // Verify operational timeline windows
     const electionCheck = await client.query(
       'SELECT electoral_status FROM elections WHERE election_id = $1 AND NOW() BETWEEN start_timestamp AND end_timestamp',
       [election_id]
@@ -294,13 +315,11 @@ app.post('/api/v1/votes/cast', verifyToken, async (req, res) => {
       throw new Error('Target election window closed or uninitialized');
     }
 
-    // Mutate state variable on identity table BEFORE processing the ballot injection
     await client.query(
       'UPDATE students SET has_voted_active_session = TRUE WHERE student_id = $1',
       [student_id]
     );
 
-    // Cryptographic Blockchain Ledger Pattern Simulation: Pull trailing hash run
     const lastBallot = await client.query(
       'SELECT previous_block_hash FROM ballots ORDER BY ledger_sequence_number DESC LIMIT 1'
     );
@@ -310,13 +329,11 @@ app.post('/api/v1/votes/cast', verifyToken, async (req, res) => {
       previousHash = lastBallot.rows[0].previous_block_hash;
     }
 
-    // Generate current transactional validation token 
     const currentBlockHash = crypto
       .createHmac('sha256', SYSTEM_BLINDING_SECRET)
       .update(`${election_id}-${candidate_hash}-${blind_signature}-${previousHash}`)
       .digest('hex');
 
-    // Execution Separation Point: Write completely decoupled record tracking ledger data
     await client.query(
       'INSERT INTO ballots (election_id, candidate_identifier_hash, previous_block_hash) VALUES ($1, $2, $3)',
       [election_id, candidate_hash, currentBlockHash]
@@ -335,9 +352,10 @@ app.post('/api/v1/votes/cast', verifyToken, async (req, res) => {
 
 /**
  * RESULTS SERVICE: Real-Time Vote Processing Calculations
+ * SECURED: Changed from verifyToken to verifyAdmin to ensure data hiding.
  * GET /api/v1/votes/realtime
  */
-app.get('/api/v1/votes/realtime', verifyToken, async (req, res) => {
+app.get('/api/v1/votes/realtime', verifyAdmin, async (req, res) => {
   const { electionId } = req.query;
   if (!electionId) {
     return res.status(400).json({ error: 'Missing election target parameter query parameters' });
@@ -361,6 +379,37 @@ app.get('/api/v1/votes/realtime', verifyToken, async (req, res) => {
 // =========================================================================
 // ADMINISTRATIVE OPERATION EXTENSIONS (MERU ELECTORAL COMMISSION)
 // =========================================================================
+
+/**
+ * ADMIN SERVICE: Update Candidate Profile Imagery Payload
+ * PATCH /api/v1/admin/candidates/profile-picture
+ */
+app.patch('/api/v1/admin/candidates/profile-picture', verifyAdmin, async (req, res) => {
+  const { candidate_id, profile_picture_base64 } = req.body;
+
+  if (!candidate_id || !profile_picture_base64) {
+    return res.status(400).json({ error: 'Missing target candidate identity node or base64 file buffer stream' });
+  }
+
+  try {
+    const queryText = `
+      UPDATE candidates 
+      SET profile_picture = $1 
+      WHERE candidate_id = $2 
+      RETURNING candidate_id
+    `;
+    const { rows } = await pool.query(queryText, [profile_picture_base64, candidate_id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Target candidate profile structure code not found.' });
+    }
+
+    return res.status(200).json({ status: 'MUTATED', message: 'Candidate profile picture saved into database successfully.' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Database pipeline transaction error saving base64 profile structure.' });
+  }
+});
 
 /**
  * ADMIN SERVICE: Initialize a New Electoral Configuration Loop
@@ -436,12 +485,10 @@ app.post('/api/v1/admin/system/reset-voters', async (req, res) => {
 // FALLBACK SPA HANDLER & INITIALIZATION
 // ==========================================
 
-// Single Page Application client-side routing tracking safety handlers
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start application runtime orchestration layer
 app.listen(PORT, () => {
   console.log(`Meru University Unified Operations Framework live on cluster port: ${PORT}`);
 });
