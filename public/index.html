@@ -1,470 +1,795 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meru University Digital Electoral Management Platform</title>
-    <style>
-        :root {
-            --primary-green: #00c853;
-            --primary-dark: #009624;
-            --bg-light: #f4f6f9;
-            --text-dark: #2c3e50;
-            --card-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            --border-radius: 12px;
-            --admin-purple: #6200ea;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MUSA Digital Electoral Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* =========================================================================
+       PHYSICAL LAYOUT ENGINE & THEME CSS
+       ========================================================================= */
+    :root {
+      --body-bg: #f8fafc;
+      --surface-white: #ffffff;
+      --text-dark: #0f172a;
+      --text-muted: #64748b;
+      --primary-brand: #0284c7;
+      --action-success: #059669;
+      --action-danger: #dc2626;
+      --border-light: #e2e8f0;
+      --card-radius: 12px;
+      --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        body {
-            background-color: var(--bg-light);
-            color: var(--text-dark);
-            line-height: 1.6;
-            padding: 20px;
-        }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--body-bg);
+      color: var(--text-dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+    /* Top Global Fixed Header Navbar */
+    .global-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--surface-white);
+      padding: 0.8rem 2rem;
+      border-bottom: 1px solid var(--border-light);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-        /* Top Header Navigation */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            padding: 20px 30px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--card-shadow);
-            margin-bottom: 25px;
-        }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
 
-        .brand-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--primary-dark);
-            border-left: 5px solid var(--primary-green);
-            padding-left: 15px;
-        }
+    .nav-logo { font-size: 2rem; }
+    .nav-brand h1 { font-size: 1.1rem; font-weight: 700; color: var(--text-dark); }
+    .nav-brand small { color: var(--text-muted); font-size: 0.8rem; display: block; }
 
-        .user-meta {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
 
-        .voter-id-badge {
-            background: #e8f5e9;
-            color: var(--primary-dark);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
+    .voter-badge {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+      padding: 0.4rem 1rem;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
 
-        .logout-btn {
-            background: #ff1744;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            text-decoration: none;
-            transition: opacity 0.2s;
-        }
+    /* Button Layout System */
+    button {
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      border: none;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
 
-        .logout-btn:hover {
-            opacity: 0.9;
-        }
+    .btn-logout {
+      background: #fee2e2;
+      color: var(--action-danger);
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      transition: var(--transition-smooth);
+    }
+    .btn-logout:hover { background: var(--action-danger); color: white; }
 
-        /* Active Election Context Card */
-        .election-hero {
-            background: white;
-            padding: 25px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--card-shadow);
-            margin-bottom: 30px;
-            border-top: 4px solid var(--primary-green);
-        }
+    .btn-panel-toggle {
+      background: #f1f5f9;
+      color: var(--text-dark);
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      transition: var(--transition-smooth);
+    }
+    .btn-panel-toggle:hover { background: #e2e8f0; }
 
-        .election-hero h2 {
-            color: var(--text-dark);
-            margin-bottom: 8px;
-        }
+    /* Main Component View Box Wrapper */
+    .main-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
 
-        .election-meta {
-            font-size: 0.9rem;
-            color: #7f8c8d;
-        }
+    /* Authentication Form Block Architecture */
+    .auth-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem 0;
+    }
 
-        /* Section Heading */
-        .section-title {
-            margin: 30px 0 15px;
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #34495e;
-        }
+    .auth-card {
+      background: var(--surface-white);
+      width: 100%;
+      max-width: 420px;
+      padding: 2.5rem;
+      border-radius: var(--card-radius);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-light);
+    }
 
-        /* 6 Candidates Grid Layout */
-        .candidates-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
+    .auth-header { text-align: center; margin-bottom: 2rem; }
+    .auth-header h2 { font-size: 1.5rem; color: var(--text-dark); margin-bottom: 0.25rem; }
+    .auth-header p { color: var(--text-muted); font-size: 0.9rem; }
 
-        .candidate-card {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--card-shadow);
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            border: 2px solid transparent;
-            transition: all 0.2s ease-in-out;
-        }
+    .auth-tabs {
+      display: flex;
+      background: #f1f5f9;
+      padding: 0.25rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
 
-        .candidate-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
+    .tab-btn {
+      flex: 1;
+      padding: 0.5rem;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: var(--transition-smooth);
+    }
+    .tab-btn.active {
+      background: var(--surface-white);
+      color: var(--text-dark);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      font-weight: 600;
+    }
 
-        /* Radio selection styling state */
-        .candidate-card.selected {
-            border-color: var(--primary-green);
-            background-color: #f0fff4;
-        }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+      color: var(--text-dark);
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      background: #f8fafc;
+      font-size: 0.95rem;
+      outline: none;
+      transition: var(--transition-smooth);
+    }
+    .form-group input:focus {
+      border-color: var(--primary-brand);
+      background: white;
+      box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    }
 
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
+    .btn-primary {
+      width: 100%;
+      background: var(--primary-brand);
+      color: white;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: var(--transition-smooth);
+    }
+    .btn-primary:hover { background: #0369a1; }
 
-        .avatar-container {
-            position: relative;
-            width: 75px;
-            height: 75px;
-        }
+    /* Notification Alert Sheets */
+    .status-banner {
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+      text-align: center;
+      font-weight: 500;
+    }
+    .status-banner.error { background: #fef2f2; border: 1px solid #fecaca; color: var(--action-danger); }
+    .status-banner.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: var(--action-success); }
 
-        .candidate-avatar {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            background: #e0e0e0;
-            border: 3px solid #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
+    /* Dashboard Interface Elements */
+    .section-title { margin-bottom: 2rem; }
+    .section-title h2 { font-size: 1.75rem; font-weight: 700; }
+    .section-title p { color: var(--text-muted); margin-top: 0.25rem; }
 
-        .candidate-info h3 {
-            font-size: 1.15rem;
-            color: var(--text-dark);
-        }
+    .election-banner-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      padding: 1.5rem 2rem;
+      border-radius: var(--card-radius);
+      margin-bottom: 2.5rem;
+    }
+    .banner-info h3 { font-size: 1.3rem; margin-bottom: 0.25rem; }
+    .banner-info p { color: #94a3b8; font-size: 0.95rem; }
+    
+    .status-indicator-live {
+      background: var(--action-success);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+    }
 
-        .candidate-id {
-            font-size: 0.8rem;
-            color: #95a5a6;
-            font-family: monospace;
-        }
+    /* Ballot Voting Matrix Responsive Layout Grid */
+    .ballot-heading { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-left: 4px solid var(--primary-brand); padding-left: 0.5rem;}
+    .candidates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
 
-        .candidate-manifesto {
-            font-style: italic;
-            color: #555;
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            flex-grow: 1;
-            border-left: 3px solid #bdc3c7;
-        }
+    .candidate-card {
+      background: var(--surface-white);
+      border: 1px solid var(--border-light);
+      border-radius: var(--card-radius);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      transition: var(--transition-smooth);
+    }
+    .candidate-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 20px -5px rgba(0,0,0,0.05);
+    }
 
-        .hash-string {
-            font-size: 0.75rem;
-            color: #bdc3c7;
-            word-break: break-all;
-            font-family: monospace;
-            margin-bottom: 15px;
-        }
+    .candidate-profile-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
 
-        /* Selection interaction element */
-        .vote-select-label {
-            display: block;
-            text-align: center;
-            background: #f1f3f5;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+    /* Bulletproof Smart Avatar Rendering */
+    .avatar-wrapper {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #e0f2fe;
+      color: var(--primary-brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      border: 2px solid var(--border-light);
+    }
+    .avatar-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
 
-        .vote-select-label:hover {
-            background: #e2e6ea;
-        }
+    .cand-meta h4 { font-size: 1.1rem; font-weight: 600; color: var(--text-dark); }
+    .cand-meta p { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-top: 0.1rem; }
 
-        .candidate-radio {
-            display: none; /* hidden radio natively driven by labels */
-        }
+    .manifesto-body {
+      font-size: 0.9rem;
+      color: #475569;
+      line-height: 1.5;
+      background: #f8fafc;
+      padding: 0.85rem;
+      border-radius: 8px;
+      margin-bottom: 1.25rem;
+      flex-grow: 1;
+      font-style: italic;
+      border: 1px dashed var(--border-light);
+    }
 
-        .candidate-radio:checked + .vote-select-label {
-            background: var(--primary-green);
-            color: white;
-        }
+    .btn-vote-action {
+      width: 100%;
+      background: #f1f5f9;
+      color: var(--text-dark);
+      padding: 0.7rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      transition: var(--transition-smooth);
+    }
+    .btn-vote-action:hover { background: var(--action-success); color: white; }
 
-        /* ADMIN EXCLUSIVE STYLING CONTROL PANEL */
-        .admin-controls {
-            display: none; /* Controlled securely via conditional server injection or JS role checks */
-            background: #f3e5f5;
-            border: 1px solid #d1c4e9;
-            padding: 8px;
-            border-radius: 6px;
-            margin-top: 10px;
-            text-align: center;
-        }
+    /* Admin Control Panel Columns Matrix */
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    .admin-card {
+      background: var(--surface-white);
+      border: 1px solid var(--border-light);
+      border-radius: var(--card-radius);
+      padding: 2rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .admin-card h3 { margin-bottom: 1.2rem; font-size: 1.25rem; font-weight: 600; border-bottom: 1px solid var(--border-light); padding-bottom: 0.5rem; }
+    .diagnostic-card p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5; }
 
-        .admin-edit-btn {
-            background: var(--admin-purple);
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+    .btn-danger {
+      background: #fee2e2;
+      color: var(--action-danger);
+      border: 1px solid #fecaca;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      transition: var(--transition-smooth);
+      width: 100%;
+      font-size: 1rem;
+    }
+    .btn-danger:hover { background: var(--action-danger); color: white; }
 
-        .admin-tally-view {
-            background: #fff3e0;
-            border: 1px dashed #ffb74d;
-            padding: 15px;
-            border-radius: var(--border-radius);
-            margin-bottom: 25px;
-            display: none; /* Securely toggled */
-        }
+    .fallback-card {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 3rem;
+      background: var(--surface-white);
+      border: 1px dashed var(--border-light);
+      border-radius: var(--card-radius);
+      color: var(--text-muted);
+    }
 
-        /* Core Execution Container */
-        .submission-bar {
-            background: white;
-            padding: 20px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--card-shadow);
-            text-align: center;
-        }
+    @keyframes pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
 
-        .commit-btn {
-            background: var(--primary-green);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            border-radius: 30px;
-            cursor: pointer;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
-            transition: transform 0.2s, background-color 0.2s;
-        }
-
-        .commit-btn:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-    </style>
+    @media (max-width: 768px) {
+      .admin-grid { grid-template-columns: 1fr; }
+      .global-navbar { flex-direction: column; gap: 1rem; text-align: center; padding: 1rem; }
+      .election-banner-card { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="container">
-        
-        <header>
-            <div class="brand-title">Active Electoral Windows</div>
-            <div class="user-meta">
-                <span class="voter-id-badge">Voter ID: <span id="voterIdDisplay">CT/12345/67</span></span>
-                <a href="/logout" class="logout-btn">Logout</a>
-            </div>
-        </header>
-
-        <div id="adminTallyPanel" class="admin-tally-view">
-            <strong>🔒 Administrative Live View:</strong> Vote counts are hidden from the frontend code of general student users. 
-            <span style="float: right; font-weight: bold; color: var(--admin-purple);">Total Ballots Received: Dynamic</span>
-        </div>
-
-        <div class="election-hero">
-            <h2>MUSA General Presidential Election 2026</h2>
-            <p class="election-meta">Select an open election loop below to configure your digital ballot. Window closes on <strong>6/16/2026, 9:17:23 AM</strong>.</p>
-        </div>
-
-        <h3 class="section-title">Secure Digital Candidates Ballot</h3>
-        
-        <form id="ballotForm" action="/commit-ballot" method="POST">
-            <div class="candidates-grid">
-
-                <div class="candidate-card" onclick="selectCard(this)">
-                    <div class="card-header">
-                        <div class="avatar-container">
-                            <img src="https://via.placeholder.com/150" alt="Candidate Avatar" class="candidate-avatar">
-                        </div>
-                        <div class="candidate-info">
-                            <h3>John Doe</h3>
-                            <div class="candidate-id">ID: c9a83421-1bfa-4927</div>
-                        </div>
-                    </div>
-                    <div class="candidate-manifesto">"Driving radical transparency and automated digital resource distribution frameworks across all campus faculties."</div>
-                    <div class="hash-string">HASH: 8f431b818a78e17...</div>
-                    
-                    <input type="radio" name="candidateSelection" id="cand1" value="cand1_id" class="candidate-radio">
-                    <label for="cand1" class="vote-select-label">Select Candidate</label>
-                    
-                    <div class="admin-controls-wrapper admin-only-view">
-                        <div class="admin-controls">
-                            <button type="button" class="admin-edit-btn" onclick="triggerPhotoUpload('cand1_id')">Change Photo</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="candidate-card" onclick="selectCard(this)">
-                    <div class="card-header">
-                        <div class="avatar-container">
-                            <img src="https://via.placeholder.com/150" alt="Candidate Avatar" class="candidate-avatar">
-                        </div>
-                        <div class="candidate-info">
-                            <h3>Jane Smith</h3>
-                            <div class="candidate-id">ID: b1284567-2cba-4112</div>
-                        </div>
-                    </div>
-                    <div class="candidate-manifesto">"Pioneering welfare strategies, accelerated student tech-hubs infrastructure, and modern research grants access."</div>
-                    <div class="hash-string">HASH: 7a312c914b89d21...</div>
-                    
-                    <input type="radio" name="candidateSelection" id="cand2" value="cand2_id" class="candidate-radio">
-                    <label for="cand2" class="vote-select-label">Select Candidate</label>
-
-                    <div class="admin-controls-wrapper admin-only-view"><div class="admin-controls"><button type="button" class="admin-edit-btn">Change Photo</button></div></div>
-                </div>
-
-                <div class="candidate-card" onclick="selectCard(this)">
-                    <div class="card-header">
-                        <div class="avatar-container">
-                            <img src="https://via.placeholder.com/150" alt="Candidate Avatar" class="candidate-avatar">
-                        </div>
-                        <div class="candidate-info">
-                            <h3>David Amina</h3>
-                            <div class="candidate-id">ID: d3456789-3dfb-5223</div>
-                        </div>
-                    </div>
-                    <div class="candidate-manifesto">"Elevating sports excellence, cultural inclusion platforms, and external collaborative corporate placement partnerships."</div>
-                    <div class="hash-string">HASH: 9e541a221f76c43...</div>
-                    
-                    <input type="radio" name="candidateSelection" id="cand3" value="cand3_id" class="candidate-radio">
-                    <label for="cand3" class="vote-select-label">Select Candidate</label>
-
-                    <div class="admin-controls-wrapper admin-only-view"><div class="admin-controls"><button type="button" class="admin-edit-btn">Change Photo</button></div></div>
-                </div>
-
-                <div class="candidate-card" onclick="selectCard(this)">
-                    <div class="card-header">
-                        <div class="avatar-container">
-                            <img src="https://via.placeholder.com/150" alt="Candidate Avatar" class="candidate-avatar">
-                        </div>
-                        <div class="candidate-info">
-                            <h3>Mercy Mwangi</h3>
-                            <div class="candidate-id">ID: e5678901-4efa-6334</div>
-                        </div>
-                    </div>
-                    <div class="candidate-manifesto">"Re-engineering library services with round-the-clock digital access and comprehensive healthcare bursary setups."</div>
-                    <div class="hash-string">HASH: 4d215b332c87e91...</div>
-                    
-                    <input type="radio" name="candidateSelection" id="cand4" value="cand4_id" class="candidate-radio">
-                    <label for="cand4" class="vote-select-label">Select Candidate</label>
-
-                    <div class="admin-controls-wrapper admin-only-view"><div class="admin-controls"><button type="button" class="admin-edit-btn">Change Photo</button></div></div>
-                </div>
-
-                <div class="candidate-card" onclick="selectCard(this)">
-                    <div class="card-header">
-                        <div class="avatar-container">
-                            <img src="https://via.placeholder.com/150" alt="Candidate Avatar" class="candidate-avatar">
-                        </div>
-                        <div class="candidate-info">
-                            <h3>Evans Kiprop</h3>
-                            <div class="candidate-id">ID: f7890123-5fab-7445</div>
-                        </div>
-                    </div>
-                    <div class="candidate-manifesto">"Advocating for sustainable campus green initiatives, smart transport, and absolute dynamic fee installment plans."</div>
-                    <div class="hash-string">HASH: 2c114f667d89a32...</div>
-                    
-                    <input type="radio" name="candidateSelection" id="cand5" value="cand5_id" class="candidate-radio">
-                    <label for="cand5" class="vote-select-label">Select Candidate</label>
-
-                    <div class="admin-controls-wrapper admin-only-view"><div class="admin-controls"><button type="button" class="admin-edit-btn">Change Photo</button></div></div>
-                </div>
-
-                <div class="candidate-card" onclick="selectCard(this)">
-                    <div class="card-header">
-                        <div class="avatar-container">
-                            <img src="https://via.placeholder.com/150" alt="Candidate Avatar" class="candidate-avatar">
-                        </div>
-                        <div class="candidate-info">
-                            <h3>Fatma Hassan</h3>
-                            <div class="candidate-id">ID: a9012345-6fbc-8556</div>
-                        </div>
-                    </div>
-                    <div class="candidate-manifesto">"Empowering gender equity incubation panels and introducing global tech bootcamps to final-year projects."</div>
-                    <div class="hash-string">HASH: 6a894d115e34b76...</div>
-                    
-                    <input type="radio" name="candidateSelection" id="cand6" value="cand6_id" class="candidate-radio">
-                    <label for="cand6" class="vote-select-label">Select Candidate</label>
-
-                    <div class="admin-controls-wrapper admin-only-view"><div class="admin-controls"><button type="button" class="admin-edit-btn">Change Photo</button></div></div>
-                </div>
-
-            </div>
-
-            <div class="submission-bar">
-                <button type="submit" class="commit-btn">Commit Encrypted Ballot</button>
-            </div>
-        </form>
-
+  <header class="global-navbar" id="global-navbar" style="display: none;">
+    <div class="nav-brand">
+      <span class="nav-logo">🎓</span>
+      <div>
+        <h1>MUSA Platform</h1>
+        <small>Meru University Electoral Commission</small>
+      </div>
     </div>
+    <div class="nav-actions">
+      <button class="btn-panel-toggle" id="admin-toggle-btn" style="display: none;">⚙️ Admin Dashboard</button>
+      <span class="voter-badge">Voter ID: <strong id="display-voter-id">---</strong></span>
+      <button class="btn-logout" id="logout-btn">🔒 Logout</button>
+    </div>
+  </header>
 
-    <script>
-        function selectCard(cardElement) {
-            // Uncheck previous visual borders
-            document.querySelectorAll('.candidate-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            // Mark selected item border visually
-            cardElement.classList.add('selected');
-            
-            // Auto check the underlying structural radio button input element
-            const radio = cardElement.querySelector('.candidate-radio');
-            if(radio) radio.checked = true;
+  <div class="main-container">
+    
+    <section class="auth-wrapper" id="auth-section">
+      <div class="auth-card">
+        <div class="auth-header">
+          <h2>Student Portal</h2>
+          <p>Secure Identity Verification Entry</p>
+        </div>
+        
+        <div class="auth-tabs">
+          <button class="tab-btn active" id="tab-login">Sign In</button>
+          <button class="tab-btn" id="tab-register">Create Account</button>
+        </div>
+
+        <div class="status-banner error" id="auth-status-msg" style="display: none;"></div>
+
+        <form id="auth-form">
+          <div class="form-group">
+            <label for="student-id">Registration ID / Admin ID</label>
+            <input type="text" id="student-id" placeholder="e.g., CT/102/120653/24" required>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Security Password</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+          </div>
+
+          <div class="form-group" id="faculty-group" style="display: none;">
+            <label for="faculty-code">Faculty Academic Code</label>
+            <select id="faculty-code">
+              <option value="SCIT">SCIT (Computing & IT)</option>
+              <option value="ENG">ENG (Engineering)</option>
+              <option value="BUSS">BUSS (Business)</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn-primary" id="auth-submit-btn">Verify & Enter</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="dashboard-view" id="voter-section" style="display: none;">
+      <header class="section-title">
+        <h2>Active Electoral Windows</h2>
+        <p>Select a running configuration loop below to commit your ballot ledger block.</p>
+      </header>
+
+      <div class="election-banner-card">
+        <div class="banner-info">
+          <h3 id="active-election-title">MUSA General Presidential Election</h3>
+          <p>Secure, decentralized real-time blockchain ballot integration.</p>
+        </div>
+        <span class="status-indicator-live">Live</span>
+      </div>
+
+      <div class="status-banner" id="voter-status-msg" style="display: none;"></div>
+
+      <h3 class="ballot-heading">Secure Digital Candidates Ballot</h3>
+      
+      <div class="candidates-grid" id="candidates-container">
+        <div class="fallback-card">Loading vetted candidate configuration streams...</div>
+      </div>
+    </section>
+
+    <section class="dashboard-view" id="admin-section" style="display: none;">
+      <header class="section-title">
+        <h2>Electoral Commission Admin Control Deck</h2>
+        <p>Privileged configurations, infrastructure resets, and profile uploads.</p>
+      </header>
+
+      <div class="status-banner" id="admin-status-msg" style="display: none;"></div>
+
+      <div class="admin-grid">
+        <div class="admin-card">
+          <h3>Update Candidate Profile Imagery</h3>
+          <form id="admin-avatar-form">
+            <div class="form-group">
+              <label for="update-candidate-id">Target Candidate ID</label>
+              <input type="text" id="update-candidate-id" placeholder="Enter target candidate database ID" required>
+            </div>
+            <div class="form-group">
+              <label for="update-avatar-file">Profile Picture Asset</label>
+              <input type="file" id="update-avatar-file" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn-primary">Mutate Profile Asset</button>
+          </form>
+        </div>
+
+        <div class="admin-card diagnostic-card">
+          <h3>Infrastructure Clean & Maintenance</h3>
+          <p>Purge current active ballots ledger arrays, wipe out transaction tables, and restore voter enrollment statuses to unvoted configurations for system cycling testing.</p>
+          <button class="btn-danger" id="system-purge-btn">⚠️ Execute Global Ledger Reset</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // State Space Memory Buffers
+    let CURRENT_JWT_TOKEN = localStorage.getItem('token') || null;
+    let USER_PROFILE = JSON.parse(localStorage.getItem('profile')) || null;
+    let ACTIVE_ELECTION_ID = null;
+    let isLoginMode = true;
+
+    // DOM Target Elements Handles
+    const authSection = document.getElementById('auth-section');
+    const voterSection = document.getElementById('voter-section');
+    const adminSection = document.getElementById('admin-section');
+    const navbar = document.getElementById('global-navbar');
+    const adminToggleBtn = document.getElementById('admin-toggle-btn');
+    const displayVoterId = document.getElementById('display-voter-id');
+    const authForm = document.getElementById('auth-form');
+    const facultyGroup = document.getElementById('faculty-group');
+    const authStatusMsg = document.getElementById('auth-status-msg');
+    const voterStatusMsg = document.getElementById('voter-status-msg');
+    const adminStatusMsg = document.getElementById('admin-status-msg');
+    const candidatesContainer = document.getElementById('candidates-container');
+
+    // UI View Switching State Router Engine
+    function syncApplicationViewState() {
+      // Clear alert spaces on state transition loops
+      authStatusMsg.style.display = 'none';
+      voterStatusMsg.style.display = 'none';
+      adminStatusMsg.style.display = 'none';
+
+      if (CURRENT_JWT_TOKEN && USER_PROFILE) {
+        authSection.style.display = 'none';
+        navbar.style.display = 'flex';
+        displayVoterId.innerText = USER_PROFILE.student_id;
+
+        if (USER_PROFILE.is_admin) {
+          adminToggleBtn.style.display = 'block';
+          adminSection.style.display = 'block';
+          voterSection.style.display = 'none';
+        } else {
+          adminToggleBtn.style.display = 'none';
+          adminSection.style.display = 'none';
+          voterSection.style.display = 'block';
+          loadActiveElectionsFramework();
+        }
+      } else {
+        authSection.style.display = 'flex';
+        navbar.style.display = 'none';
+        voterSection.style.display = 'none';
+        adminSection.style.display = 'none';
+      }
+    }
+
+    // Toggle Tab Listeners
+    document.getElementById('tab-login').addEventListener('click', (e) => {
+      isLoginMode = true;
+      e.target.classList.add('active');
+      document.getElementById('tab-register').classList.remove('active');
+      facultyGroup.style.display = 'none';
+      document.getElementById('auth-submit-btn').innerText = "Verify & Enter";
+    });
+
+    document.getElementById('tab-register').addEventListener('click', (e) => {
+      isLoginMode = false;
+      e.target.classList.add('active');
+      document.getElementById('tab-login').classList.remove('active');
+      facultyGroup.style.display = 'block';
+      document.getElementById('auth-submit-btn').innerText = "Register Identity Profile";
+    });
+
+    // Central Security Session Logout Vector
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.clear();
+      CURRENT_JWT_TOKEN = null;
+      USER_PROFILE = null;
+      syncApplicationViewState();
+    });
+
+    // Administrative Display Switcher
+    adminToggleBtn.addEventListener('click', () => {
+      if (adminSection.style.display === 'block') {
+        adminSection.style.display = 'none';
+        voterSection.style.display = 'block';
+        adminToggleBtn.innerText = "⚙️ Admin Dashboard";
+        loadActiveElectionsFramework();
+      } else {
+        adminSection.style.display = 'block';
+        voterSection.style.display = 'none';
+        adminToggleBtn.innerText = "👁️ View Ballot Grid";
+      }
+    });
+
+    // Identity Authentication Operations (Login/Signup Handler)
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      authStatusMsg.style.display = 'none';
+
+      const student_id = document.getElementById('student-id').value.trim();
+      const password = document.getElementById('password').value;
+      const faculty_code = document.getElementById('faculty-code').value;
+
+      const endpoint = isLoginMode ? '/api/v1/auth/login' : '/api/v1/auth/register';
+      const payload = isLoginMode ? { student_id, password } : { student_id, password, faculty_code };
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Authentication transmission rejection.');
         }
 
-        // --- Role & Authorization Strategy Mechanism ---
-        // This simulates toggling interface views securely depending on backend verified user permissions
-        const userRole = "student"; // Switch to "admin" securely via template verification engine
+        if (isLoginMode) {
+          localStorage.setItem('token', result.access_token);
+          localStorage.setItem('profile', JSON.stringify(result.profile));
+          CURRENT_JWT_TOKEN = result.access_token;
+          USER_PROFILE = result.profile;
+          authForm.reset();
+          syncApplicationViewState();
+        } else {
+          authStatusMsg.className = "status-banner success";
+          authStatusMsg.innerText = "Registration complete! Switch to Sign In tab to authorize entry.";
+          authStatusMsg.style.display = 'block';
+          authForm.reset();
+        }
+      } catch (err) {
+        authStatusMsg.className = "status-banner error";
+        authStatusMsg.innerText = err.message;
+        authStatusMsg.style.display = 'block';
+      }
+    });
 
-        if (userRole === "admin") {
-            document.getElementById('adminTallyPanel').style.display = 'block';
-            document.querySelectorAll('.admin-controls').forEach(controlPanel => {
-                controlPanel.style.display = 'block';
-            });
+    // Fetch and Build Active Election Loop Environment
+    async function loadActiveElectionsFramework() {
+      try {
+        const response = await fetch('/api/v1/elections/active', {
+          headers: { 'Authorization': `Bearer ${CURRENT_JWT_TOKEN}` }
+        });
+        const dynamicElections = await response.json();
+
+        if (!response.ok || dynamicElections.length === 0) {
+          document.getElementById('active-election-title').innerText = "No Open Voting Sessions Found";
+          candidatesContainer.innerHTML = `<div class="fallback-card">There are no active election configuration timelines running at this moment.</div>`;
+          return;
         }
 
-        function triggerPhotoUpload(candidateId) {
-            alert("Administrative Security Action triggered for: " + candidateId + "\nAdmin can drop an image file upload pipeline route here.");
+        const primarySession = dynamicElections[0];
+        ACTIVE_ELECTION_ID = primarySession.election_id;
+        document.getElementById('active-election-title').innerText = primarySession.title;
+        
+        loadCandidatesBallotMatrix(primarySession.election_id);
+      } catch (err) {
+        candidatesContainer.innerHTML = `<div class="fallback-card">Error parsing pipeline active configuration.</div>`;
+      }
+    }
+
+    // Dynamic Render Architecture for Candidate Profiles
+    async function loadCandidatesBallotMatrix(electionId) {
+      try {
+        const response = await fetch(`/api/v1/elections/${electionId}/candidates`, {
+          headers: { 'Authorization': `Bearer ${CURRENT_JWT_TOKEN}` }
+        });
+        const collection = await response.json();
+
+        if (!response.ok || collection.length === 0) {
+          candidatesContainer.innerHTML = `<div class="fallback-card">No vetted profiles assigned to this configuration loop.</div>`;
+          return;
         }
-    </script>
+
+        candidatesContainer.innerHTML = ''; // Reset loading text
+
+        collection.forEach(cand => {
+          // Fallback Initials calculation block to guarantee no broken icon placeholders
+          const initials = cand.candidate_id ? cand.candidate_id.substring(0, 2).toUpperCase() : "CD";
+          
+          const card = document.createElement('div');
+          card.className = 'candidate-card';
+          card.innerHTML = `
+            <div class="candidate-profile-row">
+              <div class="avatar-wrapper">
+                ${cand.profile_picture ? `<img src="${cand.profile_picture}" alt="Profile">` : initials}
+              </div>
+              <div class="cand-meta">
+                <h4>ID: ${cand.candidate_id.substring(0, 8)}...</h4>
+                <p>Faculty: ${cand.faculty_code || 'General'}</p>
+              </div>
+            </div>
+            <div class="manifesto-body">"${cand.manifesto || 'No manifesto provided by candidate.'}"</div>
+            <button class="btn-vote-action" onclick="commitSecureBallotElement('${cand.candidate_hash}')">🗳️ Cast Vote</button>
+          `;
+          candidatesContainer.appendChild(card);
+        });
+      } catch (err) {
+        candidatesContainer.innerHTML = `<div class="fallback-card">Exception occurred querying ledger channels.</div>`;
+      }
+    }
+
+    // Core Voting Pipeline Transmission Block
+    async function commitSecureBallotElement(candidateHash) {
+      voterStatusMsg.style.display = 'none';
+      
+      // Verification payload parameters simulation matching backend blinding models
+      const mockBlindSignature = "signature_block_hash_" + Math.random().toString(36).substring(2);
+
+      try {
+        const response = await fetch('/api/v1/votes/cast', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${CURRENT_JWT_TOKEN}`
+          },
+          body: JSON.stringify({
+            election_id: ACTIVE_ELECTION_ID,
+            candidate_hash: candidateHash,
+            blind_signature: mockBlindSignature
+          })
+        });
+
+        const outcome = await response.json();
+
+        if (!response.ok) {
+          throw new Error(outcome.error || 'Ballot ledger validation failed.');
+        }
+
+        voterStatusMsg.className = "status-banner success";
+        voterStatusMsg.innerText = `Ballot committed successfully! Block Hash Receipt: ${outcome.transaction_hash}`;
+        voterStatusMsg.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        voterStatusMsg.className = "status-banner error";
+        voterStatusMsg.innerText = err.message;
+        voterStatusMsg.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    // Admin Image Update Pipeline Handler (Converts File Streams to Base64 Payload Strings)
+    document.getElementById('admin-avatar-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      adminStatusMsg.style.display = 'none';
+
+      const candidate_id = document.getElementById('update-candidate-id').value.trim();
+      const fileSelector = document.getElementById('update-avatar-file');
+      
+      if (fileSelector.files.length === 0) return;
+      const primaryFile = fileSelector.files[0];
+
+      const reader = new FileReader();
+      reader.readAsDataURL(primaryFile);
+      reader.onload = async () => {
+        const base64DataString = reader.result;
+
+        try {
+          const response = await fetch('/api/v1/admin/candidates/profile-picture', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${CURRENT_JWT_TOKEN}`
+            },
+            body: JSON.stringify({ candidate_id, profile_picture_base64: base64DataString })
+          });
+
+          const summary = await response.json();
+
+          if (!response.ok) throw new Error(summary.error || 'Mutation payload rejected.');
+
+          adminStatusMsg.className = "status-banner success";
+          adminStatusMsg.innerText = "Candidate profile base64 picture stream updated successfully.";
+          adminStatusMsg.style.display = 'block';
+          document.getElementById('admin-avatar-form').reset();
+        } catch (err) {
+          adminStatusMsg.className = "status-banner error";
+          adminStatusMsg.innerText = err.message;
+          adminStatusMsg.style.display = 'block';
+        }
+      };
+    });
+
+    // Admin Global System Clear Purge Handler
+    document.getElementById('system-purge-btn').addEventListener('click', async () => {
+      const confirmApproval = confirm("CRITICAL OPERATION WARNING:\nAre you absolutely sure you want to completely wipe all election ballots data and reset voter enrollment records?");
+      if (!confirmApproval) return;
+
+      adminStatusMsg.style.display = 'none';
+
+      try {
+        const response = await fetch('/api/v1/admin/system/reset-voters', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${CURRENT_JWT_TOKEN}` }
+        });
+
+        const output = await response.json();
+
+        if (!response.ok) throw new Error(output.error || 'System purge sequence aborted.');
+
+        adminStatusMsg.className = "status-banner success";
+        adminStatusMsg.innerText = "System Ledger arrays truncated. Voter sessions restored to default profiles.";
+        adminStatusMsg.style.display = 'block';
+      } catch (err) {
+        adminStatusMsg.className = "status-banner error";
+        adminStatusMsg.innerText = err.message;
+        adminStatusMsg.style.display = 'block';
+      }
+    });
+
+    // Run Security Check Initialization sequence when document compiles
+    syncApplicationViewState();
+  </script>
 </body>
 </html>
