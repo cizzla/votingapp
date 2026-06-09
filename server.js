@@ -124,6 +124,97 @@ app.post('/api/v1/auth/login', async (req, res) => {
 });
 
 /**
+ * AUTHENTICATION SERVICE: Student Account Registration Gate
+ * POST /api/v1/auth/register
+ */
+app.post('/api/v1/auth/register', async (req, res) => {
+  const { student_id, password, faculty_code } = req.body;
+
+  if (!student_id || !password || !faculty_code) {
+    return res.status(400).json({ error: 'Missing registration details. All fields are required.' });
+  }
+
+  try {
+    // Securely hash the password string
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // Generate an automatic unique 64-character hash for biometric constraint safety
+    const safeBiometricHash = crypto.randomBytes(32).toString('hex');
+
+    // Write data directly to Neon database ledger
+    const queryText = `
+      INSERT INTO students (student_id, password_hash, faculty_code, biometric_signature_hash)
+      VALUES ($1, $2, $3, $4)
+      RETURNING student_id, faculty_code
+    `;
+    
+    const { rows } = await pool.query(queryText, [
+      student_id.trim(), 
+      passwordHash, 
+      faculty_code.trim().toUpperCase(), 
+      safeBiometricHash
+    ]);
+    
+    return res.status(201).json({
+      status: 'SUCCESS',
+      message: 'Identity registered successfully!',
+      student: rows[0]
+    });
+
+  } catch (err) {
+    console.error('Registration Security Exception:', err.message);
+    
+    // Catch database constraints gracefully and return clean JSON to frontend
+    if (err.code === '23505') {
+      return res.status(400).json({ error: 'Account setup failure: Registration ID already exists.' });
+    }
+    if (err.code === '23503') {
+      return res.status(400).json({ error: 'Invalid Institutional Context: Use SCIT, ENG, or BUSS.' });
+    }
+    
+    return res.status(500).json({ error: 'Internal identity engine exception during setup.' });
+  }
+});
+
+/**
+ * AUTHENTICATION SERVICE: Security Credentials Reset Gate
+ * POST /api/v1/auth/reset-password
+ */
+app.post('/api/v1/auth/reset-password', async (req, res) => {
+  const { student_id, password } = req.body;
+
+  if (!student_id || !password) {
+    return res.status(400).json({ error: 'Missing identifier or security clearance keys.' });
+  }
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const queryText = `
+      UPDATE students 
+      SET password_hash = $1 
+      WHERE student_id = $2
+      RETURNING student_id
+    `;
+    const { rows } = await pool.query(queryText, [passwordHash, student_id.trim()]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Identity verification failed: Registration number not found.' });
+    }
+
+    return res.status(200).json({ 
+      status: 'SUCCESS', 
+      message: 'Cryptographic access tokens updated successfully!' 
+    });
+  } catch (err) {
+    console.error('Credentials Reset Error:', err.message);
+    return res.status(500).json({ error: 'Internal processing error updating credentials.' });
+  }
+});
+
+/**
  * ELECTION SERVICE: Active Configurations Extraction
  * GET /api/v1/elections/active
  */
