@@ -270,6 +270,82 @@
             color: white;
             text-decoration: underline;
         }
+
+        /* NEW ADDITIONS FOR ADMIN ADVANCED FEATURES & LOGOUT TOOLKIT */
+        .action-nav-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-small-logout {
+            background-color: #ef4444;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 8.5pt;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-small-logout:hover {
+            background-color: #dc2626;
+        }
+
+        .admin-icon-portal {
+            background-color: #3b82f6;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 8.5pt;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .admin-icon-portal:hover {
+            background-color: #2563eb;
+        }
+
+        .candidate-card-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-align: left;
+        }
+
+        .candidate-avatar {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--green-primary);
+            background-color: var(--border-grey);
+            flex-shrink: 0;
+        }
+
+        .admin-modal-workspace {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .admin-modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 550px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body>
@@ -352,8 +428,18 @@
         <section id="dashboard-section" class="dashboard-container card hidden">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border-grey); padding-bottom: 1rem;">
                 <h2 style="border-left: 4px solid var(--green-primary); padding-left: 10px;">Active Electoral Windows</h2>
-                <div id="user-display" class="hidden" style="font-weight: 600; color: var(--text-dark);">Voter ID: <span id="voter-id-label"></span></div>
+                
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div id="user-display" class="hidden" style="font-weight: 600; color: var(--text-dark); font-size: 10pt;">
+                        Voter ID: <span id="voter-id-label"></span>
+                    </div>
+                    <div class="action-nav-container">
+                        <button id="adminPortalBtn" class="admin-icon-portal hidden" onclick="openAdminWorkspace()">🛡️ Admin Panel</button>
+                        <button class="btn-small-logout" onclick="executeAppLogout()">Logout</button>
+                    </div>
+                </div>
             </div>
+            
             <p style="color: var(--text-muted); margin-bottom: 1rem;">Select an open election loop below to configure your ballot.</p>
             <div id="elections-list" class="grid-container"></div>
             
@@ -367,6 +453,38 @@
             <div id="dashboard-status" class="status-msg hidden"></div>
         </section>
     </main>
+
+    <div id="adminModalView" class="admin-modal-workspace" style="display: none;">
+        <div class="admin-modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0; color:var(--text-dark);">Electoral Commission Workspace</h3>
+                <button onclick="closeAdminWorkspace()" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--text-muted);">&times;</button>
+            </div>
+            
+            <div style="margin-bottom:25px; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border-grey);">
+                <span style="display:block; margin-bottom:8px; font-weight:700; font-size:10pt; color:var(--green-primary);">UPDATE CANDIDATE PHOTO</span>
+                <label style="display:block; margin-bottom:4px; font-size:9pt; font-weight:600;">Candidate ID</label>
+                <input type="text" id="uploadTargetCandidateId" placeholder="e.g., 1" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #cbd5e1; border-radius:6px; font-size:10pt;">
+                
+                <label style="display:block; margin-bottom:4px; font-size:9pt; font-weight:600;">Choose Image File</label>
+                <input type="file" id="candidateImageFileInput" accept="image/*" style="width:100%; margin-bottom:15px; font-size:9.5pt;">
+                
+                <button onclick="processCandidatePhotoUpload()" style="background:var(--green-primary); color:white; border:none; padding:10px; width:100%; border-radius:6px; font-weight:600; cursor:pointer; font-size:10pt;">
+                    Save Profile Photo to Database
+                </button>
+            </div>
+
+            <div style="background:#f8fafc; padding:15px; border-radius:8px; border:1px solid var(--border-grey);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <span style="font-weight:700; font-size:10pt; color:var(--green-primary);">LIVE VOTE COUNTS (ADMIN ONLY)</span>
+                    <button onclick="loadLiveAdminTallyResults()" style="background:#3b82f6; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:8.5pt; font-weight:600; cursor:pointer;">Refresh</button>
+                </div>
+                <div id="adminLiveTallyResultsBox" style="background:#0f172a; color:#38bdf8; font-family:monospace; padding:12px; border-radius:6px; min-height:60px; font-size:9pt; overflow-x:auto;">
+                    Click refresh to fetch data straight from the secure ballot chain...
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         let CURRENT_ACCESS_TOKEN = '';
@@ -389,6 +507,24 @@
             }
         }
 
+        // SYSTEM LOGOUT MECHANISM
+        function executeAppLogout() {
+            CURRENT_ACCESS_TOKEN = '';
+            ACTIVE_ELECTION_ID = null;
+            SELECTED_CANDIDATE_HASH = null;
+            document.getElementById('student_id').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('adminPortalBtn').classList.add('hidden');
+            document.getElementById('user-display').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.add('hidden');
+            document.getElementById('auth-section').classList.remove('hidden');
+            toggleAuthView('login');
+        }
+
+        // INTERFACE MODAL TOGGLES
+        function openAdminWorkspace() { document.getElementById('adminModalView').style.display = 'flex'; }
+        function closeAdminWorkspace() { document.getElementById('adminModalView').style.display = 'none'; }
+
         // LOGIN SYSTEM
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -409,6 +545,13 @@
 
                 CURRENT_ACCESS_TOKEN = data.access_token;
                 
+                // CONDITIONAL ADMINISTRATIVE PORTAL VISIBILITY CHECK
+                if (data.profile && data.profile.is_admin) {
+                    document.getElementById('adminPortalBtn').classList.remove('hidden');
+                } else {
+                    document.getElementById('adminPortalBtn').classList.add('hidden');
+                }
+
                 document.getElementById('auth-section').classList.add('hidden');
                 document.getElementById('dashboard-section').classList.remove('hidden');
                 document.getElementById('user-display').classList.remove('hidden');
@@ -462,7 +605,7 @@
             successLabel.classList.add('hidden');
 
             try {
-                const response = await fetch('/api/v1/auth/forgot-password', {
+                const response = await fetch('/api/v1/auth/reset-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ student_id })
@@ -508,6 +651,7 @@
             }
         }
 
+        // CHOOSE ELECTION LOOP & RENDER CANDIDATES WITH PROFILE AVATARS
         async function selectElection(electionId) {
             ACTIVE_ELECTION_ID = electionId;
             SELECTED_CANDIDATE_HASH = null;
@@ -526,9 +670,12 @@
                 }
 
                 candidatesContainer.innerHTML = candidates.map(c => `
-                    <div class="selection-card" id="card-${c.candidate_hash}" onclick="selectCandidate('${c.candidate_hash}')">
-                        <span style="font-family: monospace; font-size: 9pt; font-weight: bold;">CANDIDATE HASH: ${c.candidate_hash.substring(0, 15)}...</span>
-                        <blockquote>"${c.manifesto}"</blockquote>
+                    <div class="selection-card candidate-card-profile" id="card-${c.candidate_hash}" onclick="selectCandidate('${c.candidate_hash}')">
+                        <img class="candidate-avatar" src="${c.profile_picture || '/public/img/must_logo_representative.png'}" alt="Candidate Avatar">
+                        <div style="flex-grow: 1;">
+                            <span style="font-family: monospace; font-size: 9pt; font-weight: bold; color: var(--text-dark);">CANDIDATE ID: ${c.candidate_id} | HASH: ${c.candidate_hash.substring(0, 15)}...</span>
+                            <blockquote>"${c.manifesto}"</blockquote>
+                        </div>
                     </div>
                 `).join('');
             } catch (err) {
@@ -583,6 +730,81 @@
                 statusLabel.innerText = `Submission Error: ${err.message}`;
             }
         });
+
+        // ADMINISTRATIVE BACKEND PIPELINE ACTIONS
+        async function processCandidatePhotoUpload() {
+            const candidateId = document.getElementById('uploadTargetCandidateId').value;
+            const fileInput = document.getElementById('candidateImageFileInput').files[0];
+
+            if (!candidateId || !fileInput) {
+                alert("Please specify a valid Candidate ID and choose a file image first.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.readAsDataURL(fileInput);
+            reader.onload = async function () {
+                const base64String = reader.result;
+
+                try {
+                    const response = await fetch('/api/v1/admin/candidates/profile-picture', {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${CURRENT_ACCESS_TOKEN}`
+                        },
+                        body: JSON.stringify({
+                            candidate_id: candidateId,
+                            profile_picture_base64: base64String
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (response.ok) {
+                        alert("Success: Candidate image synced to PostgreSQL!");
+                        if (ACTIVE_ELECTION_ID) selectElection(ACTIVE_ELECTION_ID);
+                    } else {
+                        alert("Upload Configuration Error: " + data.error);
+                    }
+                } catch (err) {
+                    alert("Error connection mapping: " + err.message);
+                }
+            };
+        }
+
+        async function loadLiveAdminTallyResults() {
+            const resultsBox = document.getElementById('adminLiveTallyResultsBox');
+            if (!ACTIVE_ELECTION_ID) {
+                resultsBox.innerHTML = "<span style='color:#ffb833;'>Please select an active election view behind this window first.</span>";
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/v1/votes/realtime?electionId=${ACTIVE_ELECTION_ID}`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${CURRENT_ACCESS_TOKEN}` }
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.data.length === 0) {
+                        resultsBox.innerHTML = "No blockchain ballots recorded for this node yet.";
+                        return;
+                    }
+                    let htmlRows = '<table style="width:100%; border-collapse:collapse; text-align:left;">';
+                    htmlRows += '<tr style="border-bottom:1px solid #334155;"><th style="padding:4px;">Candidate Block Hash Target</th><th style="padding:4px; text-align:right;">Tallies</th></tr>';
+                    data.data.forEach(row => {
+                        htmlRows += `<tr style="border-bottom:1px solid #1e293b;"><td style="padding:4px; font-size:8pt;">${row.candidate.substring(0,25)}...</td><td style="padding:4px; text-align:right; color:#22c55e; font-weight:bold;">${row.tally}</td></tr>`;
+                    });
+                    htmlRows += '</table>';
+                    resultsBox.innerHTML = htmlRows;
+                } else {
+                    resultsBox.innerHTML = `<span style="color:#ef4444;">Restricted Root Security Boundary: ${data.error}</span>`;
+                }
+            } catch (err) {
+                resultsBox.innerHTML = "Error parsing data structure: " + err.message;
+            }
+        }
     </script>
 </body>
 </html>
