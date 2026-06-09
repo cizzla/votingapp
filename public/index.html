@@ -187,6 +187,13 @@
             font-size: 9.5pt;
         }
 
+        .success-msg {
+            color: var(--success-green);
+            margin-top: 1rem;
+            font-weight: 600;
+            font-size: 9.5pt;
+        }
+
         .status-msg {
             margin-top: 1.5rem;
             padding: 1rem;
@@ -203,6 +210,26 @@
             padding-left: 0.75rem;
             border-left: 2px solid var(--border-grey);
         }
+
+        .auth-links-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.25rem;
+        }
+
+        .auth-link {
+            color: var(--teal-primary);
+            font-size: 9pt;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+        }
+
+        .auth-link:hover {
+            color: var(--teal-hover);
+            text-decoration: underline;
+        }
     </style>
     <meta name="theme-color" content="#0f172a">
 </head>
@@ -218,19 +245,66 @@
     <main class="app-container">
         
         <section id="auth-section" class="card">
-            <h2>Identity Verification Gate</h2>
+            <h2 id="auth-title">Identity Verification Gate</h2>
+            
             <form id="login-form">
                 <div class="form-group">
                     <label for="student_id">University Registration ID</label>
-                    <input type="text" id="student_id" required placeholder="e.g., STU101">
+                    <input type="text" id="student_id" required placeholder="e.g., CT/102/120653/24">
                 </div>
                 <div class="form-group">
                     <label for="password">Security Access Key</label>
                     <input type="password" id="password" required placeholder="••••••••">
                 </div>
                 <button type="submit" class="btn btn-primary">Verify Credentials</button>
+                
+                <div class="auth-links-container">
+                    <span class="auth-link" onclick="toggleAuthView('signup')">Create Account</span>
+                    <span class="auth-link" onclick="toggleAuthView('forgot')">Forgot Access Key?</span>
+                </div>
             </form>
+
+            <form id="signup-form" class="hidden">
+                <div class="form-group">
+                    <label for="signup_student_id">University Registration ID</label>
+                    <input type="text" id="signup_student_id" required placeholder="e.g., CT/102/120653/24">
+                </div>
+                <div class="form-group">
+                    <label for="signup_faculty">Faculty Code</label>
+                    <input type="text" id="signup_faculty" required placeholder="e.g., SCIT">
+                </div>
+                <div class="form-group">
+                    <label for="signup_biometric">Biometric Signature Token (Mock)</label>
+                    <input type="text" id="signup_biometric" required placeholder="e.g., 8a43621401348123faefd...">
+                </div>
+                <div class="form-group">
+                    <label for="signup_password">New Security Access Key</label>
+                    <input type="password" id="signup_password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary">Register Account Structure</button>
+                
+                <div class="auth-links-container">
+                    <span class="auth-link" onclick="toggleAuthView('login')">Return to Identity Gate</span>
+                </div>
+            </form>
+
+            <form id="forgot-form" class="hidden">
+                <p style="color: var(--text-muted); font-size: 9.5pt; margin-bottom: 1.5rem;">
+                    Provide your institutional registration identifier loop below to dispatch a parameters recovery pipeline sequence.
+                </p>
+                <div class="form-group">
+                    <label for="forgot_student_id">University Registration ID</label>
+                    <input type="text" id="forgot_student_id" required placeholder="e.g., CT/102/120653/24">
+                </div>
+                <button type="submit" class="btn btn-primary">Request Key Reset</button>
+                
+                <div class="auth-links-container">
+                    <span class="auth-link" onclick="toggleAuthView('login')">Return to Identity Gate</span>
+                </div>
+            </form>
+
             <p id="auth-error" class="error hidden"></p>
+            <p id="auth-success" class="success-msg hidden"></p>
         </section>
 
         <section id="dashboard-section" class="card hidden">
@@ -256,7 +330,33 @@
         let ACTIVE_ELECTION_ID = null;
         let SELECTED_CANDIDATE_HASH = null;
 
-        // Core Identity Management Authentication Processing Form Listener
+        // Visual Layout Interface Router State Engine
+        function toggleAuthView(targetView) {
+            const loginForm = document.getElementById('login-form');
+            const signupForm = document.getElementById('signup-form');
+            const forgotForm = document.getElementById('forgot-form');
+            const authTitle = document.getElementById('auth-title');
+            
+            document.getElementById('auth-error').classList.add('hidden');
+            document.getElementById('auth-success').classList.add('hidden');
+
+            loginForm.classList.add('hidden');
+            signupForm.classList.add('hidden');
+            forgotForm.classList.add('hidden');
+
+            if (targetView === 'login') {
+                loginForm.classList.remove('hidden');
+                authTitle.innerText = 'Identity Verification Gate';
+            } else if (targetView === 'signup') {
+                signupForm.classList.remove('hidden');
+                authTitle.innerText = 'Electoral Registration Gate';
+            } else if (targetView === 'forgot') {
+                forgotForm.classList.remove('hidden');
+                authTitle.innerText = 'Credential Recovery Gate';
+            }
+        }
+
+        // Core Identity Management Authentication Processing Form Listener (Original, Unaltered)
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const student_id = document.getElementById('student_id').value;
@@ -283,6 +383,66 @@
                 document.getElementById('voter-id-label').innerText = data.profile.student_id;
 
                 loadActiveElections();
+            } catch (err) {
+                errorLabel.innerText = err.message;
+                errorLabel.classList.remove('hidden');
+            }
+        });
+
+        // Async Registration Submission Engine Handler
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const student_id = document.getElementById('signup_student_id').value;
+            const faculty_code = document.getElementById('signup_faculty').value;
+            const biometric_signature_hash = document.getElementById('signup_biometric').value;
+            const password = document.getElementById('signup_password').value;
+            
+            const errorLabel = document.getElementById('auth-error');
+            const successLabel = document.getElementById('auth-success');
+            errorLabel.classList.add('hidden');
+            successLabel.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/v1/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_id, faculty_code, biometric_signature_hash, password })
+                });
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Registration sequence rejected by database rules engine.');
+
+                successLabel.innerText = 'Account parsed and sealed. Return to identity gate to log in.';
+                successLabel.classList.remove('hidden');
+                toggleAuthView('login');
+            } catch (err) {
+                errorLabel.innerText = err.message;
+                errorLabel.classList.remove('hidden');
+            }
+        });
+
+        // Async Access Key Recovery Handler
+        document.getElementById('forgot-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const student_id = document.getElementById('forgot_student_id').value;
+            const errorLabel = document.getElementById('auth-error');
+            const successLabel = document.getElementById('auth-success');
+            errorLabel.classList.add('hidden');
+            successLabel.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/v1/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_id })
+                });
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'Recovery sequence aborted by platform logic constraints.');
+
+                successLabel.innerText = data.message || 'Key recovery parameters successfully dispatched to secure registers.';
+                successLabel.classList.remove('hidden');
+                toggleAuthView('login');
             } catch (err) {
                 errorLabel.innerText = err.message;
                 errorLabel.classList.remove('hidden');
@@ -409,4 +569,3 @@
     </script>
 </body>
 </html>
-
