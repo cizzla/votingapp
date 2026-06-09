@@ -10,11 +10,10 @@
             --panel-color: #ffffff;
             --text-dark: #0f172a;
             --text-muted: #64748b;
-            /* New color definitions to match visual reference */
-            --green-primary: #09cb57; /* The main green from image */
-            --green-hover: #08a145; /* Darker green for hover */
-            --orange-primary: #ffb833; /* The yellow/orange from image */
-            --orange-hover: #cc9329; /* Darker orange for hover */
+            --green-primary: #09cb57; 
+            --green-hover: #08a145; 
+            --orange-primary: #ffb833; 
+            --orange-hover: #cc9329; 
             --border-grey: #e2e8f0;
             --error-red: #b91c1c;
             --success-green: #16a34a;
@@ -34,7 +33,6 @@
             padding-bottom: 4rem;
         }
 
-        /* light background header with university logo area representation */
         .university-header {
             background-color: var(--bg-main);
             padding: 2.5rem 1.5rem;
@@ -49,7 +47,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            text-align: center;
         }
         
         .university-logo-placeholder img {
@@ -63,7 +60,6 @@
             padding: 0 1rem;
         }
 
-        /* Custom green card structure for monolithic views to match visual reference */
         .green-card-container {
             width: 100%;
             display: flex;
@@ -72,9 +68,10 @@
 
         .green-card {
             width: 100%;
+            max-width: 450px;
             background-color: var(--green-primary);
             border-radius: 12px;
-            padding: 3rem 2.5rem 3rem 2.5rem;
+            padding: 3rem 2.5rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             color: white;
             display: flex;
@@ -83,20 +80,16 @@
             margin-bottom: 2rem;
         }
 
-        /* Customized H2 within the green card to match image style - bold, white, centered, no indicators */
         .green-card h2 {
             font-size: 16pt;
             color: white;
             margin-bottom: 2rem;
-            border-left: none; /* Remove indication border */
-            padding-left: 0;
             text-transform: uppercase;
             letter-spacing: 1px;
             text-align: center;
             font-weight: 700;
         }
         
-        /* Customized form-groups and labels within the green card */
         .green-card .form-group {
             width: 100%;
             margin-bottom: 1rem;
@@ -104,7 +97,6 @@
 
         .green-card label {
             color: white;
-            text-transform: none; /* Labels for visual matching - non uppercase, centered style not needed */
             font-weight: 600;
             font-size: 10.5pt;
             margin-bottom: 0.2rem;
@@ -120,22 +112,19 @@
             width: 100%;
             background: #ffffff;
             color: var(--text-dark);
-            margin-bottom: 0.5rem; /* Space before next element/link */
+            margin-bottom: 0.5rem;
         }
 
         .green-card input:focus {
             outline: none;
-            border-color: var(--orange-primary); /* Use orange for focus accent */
+            border-color: var(--orange-primary);
             box-shadow: 0 0 0 3px rgba(255, 184, 51, 0.2);
         }
 
-        /* Customized buttons for green card to match yellow/orange style */
         .green-card .btn {
             border-radius: 6px;
             font-size: 10pt;
             padding: 0.8rem 1.5rem;
-            letter-spacing: 0px; /* Center-align text without specific spacing */
-            text-transform: none; /* Button labels visual matching - non uppercase, centered style not needed */
             font-weight: 600;
             width: 100%;
             cursor: pointer;
@@ -144,30 +133,27 @@
             text-align: center;
         }
         
-        /* Submit button for main login form -> Orange style */
-        .btn-submit-orange {
-            background-color: var(--orange-primary);
-            color: var(--text-dark); /* Dark text on orange for visibility */
-            margin-top: 1.5rem; /* Space before first orange button */
-        }
-
-        .btn-submit-orange:hover {
-            background-color: var(--orange-hover);
-        }
-
-        /* Static button styless for LMS button - orange color with top margin */
-        .btn-static {
-            display: inline-block;
-            margin-top: 1.2rem; /* Space between orange buttons */
+        .btn-orange {
             background-color: var(--orange-primary);
             color: var(--text-dark);
+            margin-top: 0.5rem;
         }
-        
-        .btn-static:hover {
+
+        .btn-orange:hover {
             background-color: var(--orange-hover);
         }
 
-        /* Unified dashboard-section style remains cohesive, just with new green accents */
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--orange-primary) !important;
+            color: var(--orange-primary) !important;
+            margin-top: 1rem;
+        }
+
+        .btn-outline:hover {
+            background-color: rgba(255, 184, 51, 0.1);
+        }
+
         .dashboard-container .card {
             background: var(--panel-color);
             border: 1px solid var(--border-grey);
@@ -177,15 +163,6 @@
             margin-bottom: 2rem;
         }
 
-        .dashboard-container .card h2 {
-            font-size: 14pt;
-            color: var(--text-dark);
-            margin-bottom: 1.5rem;
-            border-left: 4px solid var(--green-primary); /* Accents updated to new green */
-            padding-left: 10px;
-        }
-
-        /* [Existing grid-container, selection-card, ballot-container, dashboard-box h3 and blockquote CSS] */
         .grid-container {
             display: grid;
             grid-template-columns: 1fr;
@@ -232,34 +209,39 @@
             border-left: 2px solid var(--border-grey);
         }
         
-        /* Section-level success/error messages, centralized and styled cohesive with main visual */
         .section-message-container {
             width: 100%;
             display: flex;
             justify-content: center;
-            margin-top: 1.5rem;
+            margin-top: 1rem;
         }
 
         .error-central { 
-            color: var(--error-red); 
+            color: #ffdddd; 
             font-weight: 600; 
             font-size: 9.5pt;
             text-align: center;
+            background: rgba(185, 28, 28, 0.8);
+            padding: 0.5rem;
+            border-radius: 4px;
+            width: 100%;
         }
 
         .success-central {
-            color: var(--success-green);
+            color: #d1fae5;
             font-weight: 600;
             font-size: 9.5pt;
             text-align: center;
+            background: rgba(22, 163, 74, 0.8);
+            padding: 0.5rem;
+            border-radius: 4px;
+            width: 100%;
         }
 
-        /* [Existing hidden CSS] */
         .hidden { 
             display: none !important; 
         }
 
-        /* [Existing status-msg CSS] */
         .status-msg {
             margin-top: 1.5rem;
             padding: 1rem;
@@ -269,130 +251,117 @@
             word-break: break-all;
         }
 
-        /* Customize auth links within the green card to match reference style - white, smaller, non-uppercase, right-aligned */
         .green-card .auth-links-container {
             width: 100%;
             display: flex;
-            justify-content: flex-end; /* Right-align Reset Password link */
-            margin-top: 0rem; /* Space already managed by input margin */
+            justify-content: flex-end;
+            margin-top: 0.2rem;
+            margin-bottom: 1rem;
         }
 
         .green-card .auth-link {
-            color: rgba(255, 255, 255, 0.9); /* Make links near-white on green */
+            color: rgba(255, 255, 255, 0.9);
             font-size: 9pt;
             cursor: pointer;
             font-weight: 500;
-            text-transform: none; /* Reset Password? - non uppercase, centered style not needed, right align handles it */
-            letter-spacing: 0px;
         }
 
         .green-card .auth-link:hover {
-            color: white; /* Make pure white on hover */
+            color: white;
             text-decoration: underline;
         }
-
-        /* Ensure other cohesive views retain indicators and distinct look */
-        #dashboard-section h2 {
-             border-left: 4px solid var(--green-primary);
-             padding-left: 10px;
-             color: var(--text-dark);
-             font-size: 14pt;
-             margin-bottom: 1.5rem;
-        }
-        
-        #dashboard-section .btn-success {
-            background-color: var(--success-green);
-            color: white;
-            text-transform: uppercase;
-            font-size: 1rem;
-            padding: 0.85rem 1.5rem;
-            border-radius: 4px;
-        }
     </style>
-    <meta name="theme-color" content="#0f172a">
 </head>
 <body>
 
     <header class="university-header">
         <div class="university-logo-placeholder">
-            <img src="/public/img/must_logo_representative.png" alt="University Seal Representation">
+            <img src="/public/img/must_logo_representative.png" alt="University Seal">
         </div>
     </header>
 
     <main class="app-container">
         
         <section id="auth-section">
-            <div id="login-form-container" class="green-card-container">
+            <div class="green-card-container">
                 <div class="green-card">
-                    <h2>STUDENT LOGIN</h2>
                     
-                    <form id="login-form">
-                        <div class="form-group">
-                            <label for="student_id">Registration Number</label>
-                            <input type="text" id="student_id" required placeholder="Registration Number">
-                        </div>
-                        <div class="form-group">
-                            <label for="password">Password</label>
-                            <input type="password" id="password" required placeholder="Password">
-                        </div>
-                        
-                        <div class="auth-links-container">
-                            <span class="auth-link" onclick="toggleAuthView('forgot')">Reset Password?</span>
+                    <div id="login-view-container" style="width: 100%;">
+                        <h2>STUDENT LOGIN</h2>
+                        <form id="login-form">
+                            <div class="form-group">
+                                <label for="student_id">Registration Number</label>
+                                <input type="text" id="student_id" required placeholder="Registration Number">
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" id="password" required placeholder="Password">
+                            </div>
+                            
+                            <div class="auth-links-container">
+                                <span class="auth-link" onclick="toggleAuthView('forgot')">Reset Password?</span>
                             </div>
 
-                        <button type="submit" class="btn btn-submit-orange">Login</button>
-                    </form>
-                    <div style="width: 100%;">
-                        <button class="btn btn-static">LMS (ODEL)</button>
+                            <button type="submit" class="btn btn-orange">Login</button>
+                        </form>
+                        <button class="btn btn-outline" onclick="toggleAuthView('signup')">Create an Account (Sign Up)</button>
                     </div>
-                </div>
-            </div>
 
-            <form id="signup-form" class="card hidden" style="border-left: 4px solid var(--green-primary);">
-                <h2>Electoral Registration Gate</h2>
-                <div class="form-group">
-                    <label for="signup_student_id">Registration ID</label>
-                    <input type="text" id="signup_student_id" required placeholder="e.g., CT/102/120653/24">
-                </div>
-                <button type="submit" class="btn" style="background-color: var(--green-primary); color: white; margin-top: 1.5rem; text-transform: uppercase;">Register Account Structure</button>
-                <div class="auth-links-container" style="display: flex; justify-content: flex-end; margin-top: 1rem;">
-                    <span class="auth-link" onclick="toggleAuthView('login')" style="color: var(--green-primary); font-weight: 600;">Return to Identity Gate</span>
-                </div>
-            </form>
+                    <div id="signup-view-container" class="hidden" style="width: 100%;">
+                        <h2>STUDENT SIGN UP</h2>
+                        <form id="signup-form">
+                            <div class="form-group">
+                                <label for="signup_student_id">Registration ID</label>
+                                <input type="text" id="signup_student_id" required placeholder="e.g., CT/102/120653/24">
+                            </div>
+                            <div class="form-group">
+                                <label for="signup_password">Create Password</label>
+                                <input type="password" id="signup_password" required placeholder="Password">
+                            </div>
+                            <div class="form-group">
+                                <label for="signup_faculty">Faculty Code</label>
+                                <input type="text" id="signup_faculty" placeholder="e.g., SCI">
+                            </div>
+                            
+                            <button type="submit" class="btn btn-orange">Register Account</button>
+                        </form>
+                        <button class="btn btn-outline" onclick="toggleAuthView('login')">Back to Login</button>
+                    </div>
 
-            <form id="forgot-form" class="card hidden" style="border-left: 4px solid var(--green-primary);">
-                <h2>Credential Recovery Gate</h2>
-                <p style="color: var(--text-muted); font-size: 9.5pt; margin-bottom: 1.5rem;">
-                    Provide your institutional registration identifier loop below to dispatch a parameters recovery pipeline sequence.
-                </p>
-                <div class="form-group">
-                    <label for="forgot_student_id">Registration ID</label>
-                    <input type="text" id="forgot_student_id" required placeholder="e.g., CT/102/120653/24">
-                </div>
-                <button type="submit" class="btn" style="background-color: var(--green-primary); color: white; margin-top: 1.5rem; text-transform: uppercase;">Request Key Reset</button>
-                <div class="auth-links-container" style="display: flex; justify-content: flex-end; margin-top: 1rem;">
-                    <span class="auth-link" onclick="toggleAuthView('login')" style="color: var(--green-primary); font-weight: 600;">Return to Identity Gate</span>
-                </div>
-            </form>
+                    <div id="forgot-view-container" class="hidden" style="width: 100%;">
+                        <h2>RESET PASSWORD</h2>
+                        <form id="forgot-form">
+                            <div class="form-group">
+                                <label for="forgot_student_id">Registration ID</label>
+                                <input type="text" id="forgot_student_id" required placeholder="e.g., CT/102/120653/24">
+                            </div>
+                            <button type="submit" class="btn btn-orange">Request Reset Key</button>
+                        </form>
+                        <button class="btn btn-outline" onclick="toggleAuthView('login')">Back to Login</button>
+                    </div>
 
-            <div class="section-message-container">
-                <p id="auth-error" class="error-central hidden"></p>
-                <p id="auth-success" class="success-central hidden"></p>
+                    <div class="section-message-container">
+                        <p id="auth-error" class="error-central hidden"></p>
+                        <p id="auth-success" class="success-central hidden"></p>
+                    </div>
+
+                </div>
             </div>
         </section>
 
         <section id="dashboard-section" class="dashboard-container card hidden">
-            <h2>Active Electoral Windows</h2>
-            <p style="color: var(--text-muted); margin-bottom: 1rem;">Select an open parameter loop below to configure your ballot configuration.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border-grey); padding-bottom: 1rem;">
+                <h2 style="border-left: 4px solid var(--green-primary); padding-left: 10px;">Active Electoral Windows</h2>
+                <div id="user-display" class="hidden" style="font-weight: 600; color: var(--text-dark);">Voter ID: <span id="voter-id-label"></span></div>
+            </div>
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">Select an open election loop below to configure your ballot.</p>
             <div id="elections-list" class="grid-container"></div>
             
             <div id="ballot-box" class="ballot-container hidden">
                 <h3>Secure Digital Ballot</h3>
-                <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 9.5pt;">
-                    Select an approved structural asset reference. Your decision is decoupled inside the database tracking ledger using system blind signatures.
-                </p>
+                <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 9.5pt;">Select your candidate reference asset below.</p>
                 <div id="candidates-container"></div>
-                <button id="submit-ballot-btn" class="btn btn-success" style="margin-top: 1.5rem;">Commit Encrypted Ballot</button>
+                <button id="submit-ballot-btn" class="btn" style="margin-top: 1.5rem; background-color: var(--success-green); color: white; padding: 0.8rem; border: none; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer;">Commit Encrypted Ballot</button>
             </div>
             
             <div id="dashboard-status" class="status-msg hidden"></div>
@@ -404,29 +373,23 @@
         let ACTIVE_ELECTION_ID = null;
         let SELECTED_CANDIDATE_HASH = null;
 
-        // Visual Interface Router State Engine - Adapted for Monolithic Container Toggling
         function toggleAuthView(targetView) {
-            const loginFormContainer = document.getElementById('login-form-container'); // Renamed green monolithic card
-            const signupForm = document.getElementById('signup-form'); // Distinct card with indica indicators
-            const forgotForm = document.getElementById('forgot-form'); // Distinct card with indica indicators
-            
-            // Clear current central messages
+            document.getElementById('login-view-container').classList.add('hidden');
+            document.getElementById('signup-view-container').classList.add('hidden');
+            document.getElementById('forgot-view-container').classList.add('hidden');
             document.getElementById('auth-error').classList.add('hidden');
             document.getElementById('auth-success').classList.add('hidden');
 
-            // Hide everything (formcontainers) operatively inside this section
-            document.querySelectorAll('#auth-section > div, #auth-section > form').forEach(el => el.classList.add('hidden'));
-
             if (targetView === 'login') {
-                loginFormContainer.classList.remove('hidden');
+                document.getElementById('login-view-container').classList.remove('hidden');
             } else if (targetView === 'signup') {
-                signupForm.classList.remove('hidden');
+                document.getElementById('signup-view-container').classList.remove('hidden');
             } else if (targetView === 'forgot') {
-                forgotForm.classList.remove('hidden');
+                document.getElementById('forgot-view-container').classList.remove('hidden');
             }
         }
 
-        // Core Identity Management Authentication Processing Form Listener (Original, Unaltered and safe)
+        // LOGIN SYSTEM
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const student_id = document.getElementById('student_id').value;
@@ -446,7 +409,6 @@
 
                 CURRENT_ACCESS_TOKEN = data.access_token;
                 
-                // Orchestrate runtime UI structural context shift
                 document.getElementById('auth-section').classList.add('hidden');
                 document.getElementById('dashboard-section').classList.remove('hidden');
                 document.getElementById('user-display').classList.remove('hidden');
@@ -459,20 +421,12 @@
             }
         });
 
-        // Async Registration Submission Engine Handler - Safe and Unaltered Logic
+        // SIGN UP SYSTEM
         document.getElementById('signup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const student_id = document.getElementById('signup_student_id').value;
-            // Faculty_code / biometric_signature_hash omit input field visual matching from this monolithic card view as requested 'unnecessary credentials', but JS is retained just in case, input fields ids are kept but unlinked from submit Payloads if not present. No, IDs must stay same. The image only shows Login/Forgot. So, Signup view should remain unexposed from Login view. I've unexposed the link, but kept view in, but let me remove 'extra' fields from this specific view to match 'remove necessary credentials' as well. I'll just have ID and Pass. Okay. IDs: `signup_student_id`, `signup_password` remain. Submit calls `/api/v1/auth/register`. My backend might expect those other 2. I should probably just unexpose the link strictly to the view to match the visual *strictly*, and keep the view working if called by direct API but simplify form contents. Wait, the multi-view logic works. I'm just unexposing the 'Create Account' link to match the reference *strictly*. The hidden view and its logic must stay 'working effectively' to fulfill that constraint. Okay, done.
-
-            // Assemble payload matching signup form structure
-            const signupFields = ['signup_faculty', 'signup_biometric'];
-            const payload = { student_id, password: document.getElementById('signup_password').value };
-            signupFields.forEach(field => {
-                const input = document.getElementById(field);
-                if(input) payload[field.replace('signup_', '')] = input.value;
-            });
-            // Correction, input IDs are signup_student_id, signup_password. 
+            const password = document.getElementById('signup_password').value;
+            const faculty_code = document.getElementById('signup_faculty').value || 'GEN';
 
             const errorLabel = document.getElementById('auth-error');
             const successLabel = document.getElementById('auth-success');
@@ -483,23 +437,22 @@
                 const response = await fetch('/api/v1/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // body: JSON.stringify({ student_id, faculty_code, biometric_signature_hash, password })
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ student_id, password, faculty_code })
                 });
                 const data = await response.json();
 
-                if (!response.ok) throw new Error(data.error || 'Registration sequence rejected by database rules engine.');
+                if (!response.ok) throw new Error(data.error || 'Registration sequence rejected.');
 
-                successLabel.innerText = 'Account parsed and sealed. Return to identity gate to log in.';
+                successLabel.innerText = 'Account registered successfully! Proceeding to Login.';
                 successLabel.classList.remove('hidden');
-                toggleAuthView('login');
+                setTimeout(() => { toggleAuthView('login'); }, 2000);
             } catch (err) {
                 errorLabel.innerText = err.message;
                 errorLabel.classList.remove('hidden');
             }
         });
 
-        // Async Access Key Recovery Handler - Safe and Unaltered Logic
+        // FORGOT PASSWORD SYSTEM
         document.getElementById('forgot-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const student_id = document.getElementById('forgot_student_id').value;
@@ -516,18 +469,18 @@
                 });
                 const data = await response.json();
 
-                if (!response.ok) throw new Error(data.error || 'Recovery sequence aborted by platform logic constraints.');
+                if (!response.ok) throw new Error(data.error || 'Recovery sequence failed.');
 
-                successLabel.innerText = data.message || 'Key recovery parameters successfully dispatched to secure registers.';
+                successLabel.innerText = data.message || 'Key recovery configuration dispatched.';
                 successLabel.classList.remove('hidden');
-                toggleAuthView('login');
+                setTimeout(() => { toggleAuthView('login'); }, 3000);
             } catch (err) {
                 errorLabel.innerText = err.message;
                 errorLabel.classList.remove('hidden');
             }
         });
 
-        // Async Election Configuration Retrieval Strategy (Safe and Unaltered)
+        // LOAD OPEN ELECTORAL WINDOWS
         async function loadActiveElections() {
             const listContainer = document.getElementById('elections-list');
             try {
@@ -537,7 +490,7 @@
                 const elections = await response.json();
 
                 if (elections.length === 0) {
-                    listContainer.innerHTML = '<p style="color: var(--text-muted);">No currently active institutional voting sessions are open.</p>';
+                    listContainer.innerHTML = '<p style="color: var(--text-muted);">No active voting windows open right now.</p>';
                     return;
                 }
 
@@ -545,23 +498,21 @@
                     <div class="selection-card" onclick="selectElection('${el.election_id}')">
                         <strong style="color: var(--green-primary); font-size: 11pt;">${el.title}</strong>
                         <p style="font-size: 9pt; color: var(--text-muted); margin-top: 0.25rem;">
-                            Session Scope Reference Window: ${new Date(el.end_timestamp).toLocaleString()}
+                            Closes: ${new Date(el.end_timestamp).toLocaleString()}
                         </p>
                     </div>
                 `).join('');
             } catch (err) {
                 document.getElementById('dashboard-status').classList.remove('hidden');
-                document.getElementById('dashboard-status').innerText = 'System Error: Failed to load operational electoral configuration loops.';
+                document.getElementById('dashboard-status').innerText = 'System Error: Failed to load elections.';
             }
         }
 
-        // Active Candidate Lifecycle Stream Mapping Selector (Safe and Unaltered)
         async function selectElection(electionId) {
             ACTIVE_ELECTION_ID = electionId;
             SELECTED_CANDIDATE_HASH = null;
             const candidatesContainer = document.getElementById('candidates-container');
             document.getElementById('ballot-box').classList.remove('hidden');
-            document.getElementById('dashboard-status').classList.add('hidden');
 
             try {
                 const response = await fetch(`/api/v1/elections/${electionId}/candidates`, {
@@ -570,44 +521,38 @@
                 const candidates = await response.json();
 
                 if (candidates.length === 0) {
-                    candidatesContainer.innerHTML = '<p style="color: var(--text-muted);">No vetted candidate rosters assigned to this partition.</p>';
+                    candidatesContainer.innerHTML = '<p style="color: var(--text-muted);">No candidates registered here.</p>';
                     return;
                 }
 
                 candidatesContainer.innerHTML = candidates.map(c => `
                     <div class="selection-card" id="card-${c.candidate_hash}" onclick="selectCandidate('${c.candidate_hash}')">
-                        <span style="font-family: monospace; font-size: 9pt; font-weight: bold;">NODE_REF: ${c.candidate_hash.substring(0, 24)}...</span>
+                        <span style="font-family: monospace; font-size: 9pt; font-weight: bold;">CANDIDATE HASH: ${c.candidate_hash.substring(0, 15)}...</span>
                         <blockquote>"${c.manifesto}"</blockquote>
                     </div>
                 `).join('');
             } catch (err) {
-                candidatesContainer.innerHTML = '<p class="error">Execution Exception: Failed to map candidate records.</p>';
+                candidatesContainer.innerHTML = '<p style="color: var(--error-red);">Failed to fetch candidate parameters.</p>';
             }
         }
 
-        // Candidate Selection State (Safe and Unaltered)
         function selectCandidate(candidateHash) {
             SELECTED_CANDIDATE_HASH = candidateHash;
-            document.querySelectorAll('#candidates-container .selection-card').forEach(card => {
-                card.classList.remove('selected');
-            });
+            document.querySelectorAll('#candidates-container .selection-card').forEach(card => card.classList.remove('selected'));
             document.getElementById(`card-${candidateHash}`).classList.add('selected');
         }
 
-        // Decoupled Voting Service Transmission Handler (Safe and Unaltered)
+        // CAST BALLOT SUBMISSION
         document.getElementById('submit-ballot-btn').addEventListener('click', async () => {
             if (!ACTIVE_ELECTION_ID || !SELECTED_CANDIDATE_HASH) {
-                alert('Electoral validation error: Choose a candidate asset target first.');
+                alert('Please pick a candidate target first.');
                 return;
             }
 
             const statusLabel = document.getElementById('dashboard-status');
             statusLabel.classList.remove('hidden');
-            statusLabel.style.background = '#f1f5f9';
-            statusLabel.style.color = 'var(--text-dark)';
-            statusLabel.innerText = 'Encrypting state parameters...';
+            statusLabel.innerText = 'Processing your ballot transaction secure chain...';
 
-            // Generate high-entropy blind signature component sequence local tracking reference
             const blind_signature = btoa(Math.random().toString(36).substring(2) + Date.now().toString());
 
             try {
@@ -625,23 +570,16 @@
                 });
                 const data = await response.json();
 
-                if (!response.ok) throw new Error(data.error || 'Transactional submission rejected by gateway rules engine');
+                if (!response.ok) throw new Error(data.error || 'Transactional delivery rejected.');
 
-                // Clear structural presentation nodes on transaction completion
                 document.getElementById('ballot-box').classList.add('hidden');
                 document.getElementById('elections-list').innerHTML = '';
-                statusLabel.style.background = '#f0fdfa';
-                statusLabel.style.color = 'var(--green-primary)';
                 statusLabel.innerHTML = `
-                    <strong>Transaction Executed & Sealed Successfully!</strong><br>
-                    <span style="font-size: 8.5pt; color: var(--text-dark);">
-                        Voter identity state flags cleared. Ledger cryptographic sequence chain receipt block signature index hash reference:
-                    </span><br>
-                    <code style="font-size: 8.5pt; font-weight: bold; color: var(--green-hover);">${data.transaction_hash}</code>
+                    <strong style="color: var(--success-green);">Vote Logged Successfully!</strong><br>
+                    <span style="font-size: 8.5pt;">Receipt validation block hash:</span><br>
+                    <code>${data.transaction_hash}</code>
                 `;
             } catch (err) {
-                statusLabel.style.background = '#fdf2f2';
-                statusLabel.style.color = 'var(--error-red)';
                 statusLabel.innerText = `Submission Error: ${err.message}`;
             }
         });
