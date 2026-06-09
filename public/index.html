@@ -98,15 +98,6 @@
     }
     .btn-logout:hover { background: var(--action-danger); color: white; }
 
-    .btn-panel-toggle {
-      background: #f1f5f9;
-      color: var(--text-dark);
-      padding: 0.4rem 1rem;
-      border-radius: 6px;
-      transition: var(--transition-smooth);
-    }
-    .btn-panel-toggle:hover { background: #e2e8f0; }
-
     /* Main Component View Box Wrapper */
     .main-container {
       max-width: 1200px;
@@ -376,8 +367,7 @@
       </div>
     </div>
     <div class="nav-actions">
-      <button class="btn-panel-toggle" id="admin-toggle-btn" style="display: none;">⚙️ Admin Dashboard</button>
-      <span class="voter-badge">Voter ID: <strong id="display-voter-id">---</strong></span>
+      <span class="voter-badge">ID: <strong id="display-voter-id">---</strong></span>
       <button class="btn-logout" id="logout-btn">🔒 Logout</button>
     </div>
   </header>
@@ -459,7 +449,7 @@
     <section class="dashboard-view" id="admin-section" style="display: none;">
       <header class="section-title">
         <h2>Electoral Commission Admin Control Deck</h2>
-        <p>Privileged configurations, infrastructure resets, and profile uploads.</p>
+        <p>Privileged configurations, real-time results analytics, and picture uploads.</p>
       </header>
 
       <div class="status-banner" id="admin-status-msg" style="display: none;"></div>
@@ -487,7 +477,7 @@
         </div>
 
         <div class="admin-card" style="grid-column: 1 / -1; margin-top: 0.5rem;">
-          <h3>📈 Live Election Ballot Audit Ledger (Results Matrix)</h3>
+          <h3>📈 Live Election Ballot Audit Ledger (Results Matrix) - Auto Updates Live</h3>
           <div id="admin-results-container" style="margin-top: 1rem;">
             <div class="fallback-card">Awaiting live calculation array streams from server...</div>
           </div>
@@ -502,14 +492,14 @@
     let CURRENT_JWT_TOKEN = localStorage.getItem('token') || null;
     let USER_PROFILE = JSON.parse(localStorage.getItem('profile')) || null;
     let ACTIVE_ELECTION_ID = null;
-    let currentAuthMode = 'login'; // Can switch between: 'login', 'register', 'admin', 'forgot'
+    let currentAuthMode = 'login'; 
+    let realTimePollingId = null; // Holds the real-time background tracker handle
 
     // DOM Target Elements Handles
     const authSection = document.getElementById('auth-section');
     const voterSection = document.getElementById('voter-section');
     const adminSection = document.getElementById('admin-section');
     const navbar = document.getElementById('global-navbar');
-    const adminToggleBtn = document.getElementById('admin-toggle-btn');
     const displayVoterId = document.getElementById('display-voter-id');
     const authForm = document.getElementById('auth-form');
     const facultyGroup = document.getElementById('faculty-group');
@@ -528,18 +518,26 @@
       voterStatusMsg.style.display = 'none';
       adminStatusMsg.style.display = 'none';
 
+      // Clean up previous interval instances to prevent stacking engine duplicates
+      if (realTimePollingId) {
+        clearInterval(realTimePollingId);
+        realTimePollingId = null;
+      }
+
       if (CURRENT_JWT_TOKEN && USER_PROFILE) {
         authSection.style.display = 'none';
         navbar.style.display = 'flex';
         displayVoterId.innerText = USER_PROFILE.student_id;
 
         if (USER_PROFILE.is_admin) {
-          adminToggleBtn.style.display = 'block';
           adminSection.style.display = 'block';
           voterSection.style.display = 'none';
-          loadAdminLiveVotesLedger(); // Run analytical tally engine updates
+          
+          // Initial immediate data load
+          loadAdminLiveVotesLedger(); 
+          // Bind the calculation table to auto-poll every 3 seconds for real-time reporting
+          realTimePollingId = setInterval(loadAdminLiveVotesLedger, 3000);
         } else {
-          adminToggleBtn.style.display = 'none';
           adminSection.style.display = 'none';
           voterSection.style.display = 'block';
           loadActiveElectionsFramework();
@@ -615,6 +613,10 @@
 
     // Central Security Session Logout Vector
     document.getElementById('logout-btn').addEventListener('click', () => {
+      if (realTimePollingId) {
+        clearInterval(realTimePollingId);
+        realTimePollingId = null;
+      }
       localStorage.clear();
       CURRENT_JWT_TOKEN = null;
       USER_PROFILE = null;
@@ -622,22 +624,7 @@
       syncApplicationViewState();
     });
 
-    // Administrative Display Switcher
-    adminToggleBtn.addEventListener('click', () => {
-      if (adminSection.style.display === 'block') {
-        adminSection.style.display = 'none';
-        voterSection.style.display = 'block';
-        adminToggleBtn.innerText = "⚙️ Admin Dashboard";
-        loadActiveElectionsFramework();
-      } else {
-        adminSection.style.display = 'block';
-        voterSection.style.display = 'none';
-        adminToggleBtn.innerText = "👁️ View Ballot Grid";
-        loadAdminLiveVotesLedger();
-      }
-    });
-
-    // Identity Authentication Operations Router (Interceptors Built-In)
+    // Identity Authentication Operations Router
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       authStatusMsg.style.display = 'none';
@@ -650,7 +637,6 @@
       // 1. Strict Interception for Admin Mode
       if (currentAuthMode === 'admin') {
         if (password === 'fred') {
-          // Bypass network transport loops safely and map to layout state engine
           const mockProfile = { student_id: student_id || "MUSA-ADMIN", is_admin: true };
           const mockToken = "admin_privileged_token_bypass_" + btoa(student_id);
           
@@ -695,7 +681,7 @@
         return;
       }
 
-      // 3. Native Student Database Connection Flows (Untouched Pipeline Channels)
+      // 3. Native Student Database Connection Flows
       const endpoint = (currentAuthMode === 'login') ? '/api/v1/auth/login' : '/api/v1/auth/register';
       const payload = (currentAuthMode === 'login') ? { student_id, password } : { student_id, password, faculty_code };
 
@@ -756,7 +742,7 @@
       }
     }
 
-    // Dynamic Render Architecture for Candidate Profiles
+    // Dynamic Render Architecture for Candidate Profiles (Fixed name display)
     async function loadCandidatesBallotMatrix(electionId) {
       try {
         const response = await fetch(`/api/v1/elections/${electionId}/candidates`, {
@@ -782,7 +768,7 @@
                 ${cand.profile_picture ? `<img src="${cand.profile_picture}" alt="Profile">` : initials}
               </div>
               <div class="cand-meta">
-                <h4>ID: ${cand.candidate_id.substring(0, 8)}...</h4>
+                <h4>${cand.candidate_id}</h4>
                 <p>Faculty: ${cand.faculty_code || 'General'}</p>
               </div>
             </div>
@@ -904,7 +890,7 @@
           if (!response.ok) throw new Error(summary.error || 'Mutation payload rejected.');
 
           adminStatusMsg.className = "status-banner success";
-          adminStatusMsg.innerText = "Candidate profile base64 picture stream updated successfully.";
+          adminStatusMsg.innerText = "Candidate profile picture updated successfully.";
           adminStatusMsg.style.display = 'block';
           document.getElementById('admin-avatar-form').reset();
         } catch (err) {
