@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en)
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -97,6 +97,15 @@
       transition: var(--transition-smooth);
     }
     .btn-logout:hover { background: var(--action-danger); color: white; }
+
+    .btn-panel-toggle {
+      background: #f1f5f9;
+      color: var(--text-dark);
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      transition: var(--transition-smooth);
+    }
+    .btn-panel-toggle:hover { background: #e2e8f0; }
 
     /* Main Component View Box Wrapper */
     .main-container {
@@ -227,41 +236,76 @@
       animation: pulse 2s infinite;
     }
 
-    /* Ballot Voting Matrix Responsive Layout Grid */
-    .ballot-heading { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-left: 4px solid var(--primary-brand); padding-left: 0.5rem;}
-    .candidates-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5rem;
-      margin-top: 1rem;
-    }
-
-    .candidate-card {
+    /* Ballot Voting Matrix Responsive Layout List/Table */
+    .ballot-heading { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-left: 4px solid var(--action-success); padding-left: 0.5rem;}
+    
+    .ballot-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
       background: var(--surface-white);
-      border: 1px solid var(--border-light);
       border-radius: var(--card-radius);
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      transition: var(--transition-smooth);
-    }
-    .candidate-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 20px -5px rgba(0,0,0,0.05);
+      border: 1px solid var(--border-light);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
     }
 
-    .candidate-profile-row {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
+    .ballot-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
     }
+
+    .ballot-table th {
+      background: #007b55; /* Emerald tone matches user request reference imagery */
+      color: white;
+      padding: 1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .ballot-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-light);
+      vertical-align: middle;
+    }
+
+    .ballot-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .ballot-radio {
+      width: 1.25rem;
+      height: 1.25rem;
+      cursor: pointer;
+      accent-color: #007b55;
+    }
+
+    .btn-submit-vote-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .btn-submit-vote {
+      background: #007b55;
+      color: white;
+      padding: 0.85rem 3rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: var(--transition-smooth);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .btn-submit-vote:hover { background: #00593c; transform: translateY(-1px); }
 
     /* Bulletproof Smart Avatar Rendering */
     .avatar-wrapper {
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
+      width: 54px;
+      height: 54px;
+      border-radius: 4px;
       overflow: hidden;
       background: #e0f2fe;
       color: var(--primary-brand);
@@ -269,41 +313,14 @@
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 1.2rem;
-      border: 2px solid var(--border-light);
+      font-size: 1.1rem;
+      border: 1px solid var(--border-light);
     }
     .avatar-wrapper img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-
-    .cand-meta h4 { font-size: 1.1rem; font-weight: 600; color: var(--text-dark); }
-    .cand-meta p { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-top: 0.1rem; }
-
-    .manifesto-body {
-      font-size: 0.9rem;
-      color: #475569;
-      line-height: 1.5;
-      background: #f8fafc;
-      padding: 0.85rem;
-      border-radius: 8px;
-      margin-bottom: 1.25rem;
-      flex-grow: 1;
-      font-style: italic;
-      border: 1px dashed var(--border-light);
-    }
-
-    .btn-vote-action {
-      width: 100%;
-      background: #f1f5f9;
-      color: var(--text-dark);
-      padding: 0.7rem;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      transition: var(--transition-smooth);
-    }
-    .btn-vote-action:hover { background: var(--action-success); color: white; }
 
     /* Admin Control Panel Columns Matrix */
     .admin-grid {
@@ -334,13 +351,13 @@
     .btn-danger:hover { background: var(--action-danger); color: white; }
 
     .fallback-card {
-      grid-column: 1 / -1;
       text-align: center;
       padding: 3rem;
       background: var(--surface-white);
       border: 1px dashed var(--border-light);
       border-radius: var(--card-radius);
       color: var(--text-muted);
+      width: 100%;
     }
 
     @keyframes pulse {
@@ -367,7 +384,8 @@
       </div>
     </div>
     <div class="nav-actions">
-      <span class="voter-badge">ID: <strong id="display-voter-id">---</strong></span>
+      <button class="btn-panel-toggle" id="admin-toggle-btn" style="display: none;">⚙️ Admin Dashboard</button>
+      <span class="voter-badge">Voter ID: <strong id="display-voter-id">---</strong></span>
       <button class="btn-logout" id="logout-btn">🔒 Logout</button>
     </div>
   </header>
@@ -439,9 +457,9 @@
 
       <div class="status-banner" id="voter-status-msg" style="display: none;"></div>
 
-      <h3 class="ballot-heading">Secure Digital Candidates Ballot</h3>
+      <h3 class="ballot-heading">ONLINE STUDENT ELECTION</h3>
       
-      <div class="candidates-grid" id="candidates-container">
+      <div id="candidates-container">
         <div class="fallback-card">Loading vetted candidate configuration streams...</div>
       </div>
     </section>
@@ -449,7 +467,7 @@
     <section class="dashboard-view" id="admin-section" style="display: none;">
       <header class="section-title">
         <h2>Electoral Commission Admin Control Deck</h2>
-        <p>Privileged configurations, real-time results analytics, and picture uploads.</p>
+        <p>Privileged configurations, infrastructure resets, and profile uploads.</p>
       </header>
 
       <div class="status-banner" id="admin-status-msg" style="display: none;"></div>
@@ -477,7 +495,7 @@
         </div>
 
         <div class="admin-card" style="grid-column: 1 / -1; margin-top: 0.5rem;">
-          <h3>📈 Live Election Ballot Audit Ledger (Results Matrix) - Auto Updates Live</h3>
+          <h3>📈 Live Election Ballot Audit Ledger (Results Matrix)</h3>
           <div id="admin-results-container" style="margin-top: 1rem;">
             <div class="fallback-card">Awaiting live calculation array streams from server...</div>
           </div>
@@ -493,13 +511,13 @@
     let USER_PROFILE = JSON.parse(localStorage.getItem('profile')) || null;
     let ACTIVE_ELECTION_ID = null;
     let currentAuthMode = 'login'; 
-    let realTimePollingId = null; // Holds the real-time background tracker handle
 
     // DOM Target Elements Handles
     const authSection = document.getElementById('auth-section');
     const voterSection = document.getElementById('voter-section');
     const adminSection = document.getElementById('admin-section');
     const navbar = document.getElementById('global-navbar');
+    const adminToggleBtn = document.getElementById('admin-toggle-btn');
     const displayVoterId = document.getElementById('display-voter-id');
     const authForm = document.getElementById('auth-form');
     const facultyGroup = document.getElementById('faculty-group');
@@ -518,26 +536,18 @@
       voterStatusMsg.style.display = 'none';
       adminStatusMsg.style.display = 'none';
 
-      // Clean up previous interval instances to prevent stacking engine duplicates
-      if (realTimePollingId) {
-        clearInterval(realTimePollingId);
-        realTimePollingId = null;
-      }
-
       if (CURRENT_JWT_TOKEN && USER_PROFILE) {
         authSection.style.display = 'none';
         navbar.style.display = 'flex';
         displayVoterId.innerText = USER_PROFILE.student_id;
 
         if (USER_PROFILE.is_admin) {
+          adminToggleBtn.style.display = 'block';
           adminSection.style.display = 'block';
           voterSection.style.display = 'none';
-          
-          // Initial immediate data load
           loadAdminLiveVotesLedger(); 
-          // Bind the calculation table to auto-poll every 3 seconds for real-time reporting
-          realTimePollingId = setInterval(loadAdminLiveVotesLedger, 3000);
         } else {
+          adminToggleBtn.style.display = 'none';
           adminSection.style.display = 'none';
           voterSection.style.display = 'block';
           loadActiveElectionsFramework();
@@ -613,15 +623,26 @@
 
     // Central Security Session Logout Vector
     document.getElementById('logout-btn').addEventListener('click', () => {
-      if (realTimePollingId) {
-        clearInterval(realTimePollingId);
-        realTimePollingId = null;
-      }
       localStorage.clear();
       CURRENT_JWT_TOKEN = null;
       USER_PROFILE = null;
       currentAuthMode = 'login';
       syncApplicationViewState();
+    });
+
+    // Administrative Display Switcher
+    adminToggleBtn.addEventListener('click', () => {
+      if (adminSection.style.display === 'block') {
+        adminSection.style.display = 'none';
+        voterSection.style.display = 'block';
+        adminToggleBtn.innerText = "⚙️ Admin Dashboard";
+        loadActiveElectionsFramework();
+      } else {
+        adminSection.style.display = 'block';
+        voterSection.style.display = 'none';
+        adminToggleBtn.innerText = "👁️ View Ballot Grid";
+        loadAdminLiveVotesLedger();
+      }
     });
 
     // Identity Authentication Operations Router
@@ -634,7 +655,6 @@
       const faculty_code = document.getElementById('faculty-code').value;
       const verification_code = document.getElementById('verification-code').value;
 
-      // 1. Strict Interception for Admin Mode
       if (currentAuthMode === 'admin') {
         if (password === 'fred') {
           const mockProfile = { student_id: student_id || "MUSA-ADMIN", is_admin: true };
@@ -656,7 +676,6 @@
         }
       }
 
-      // 2. Forgot Password Execution Model Handler
       if (currentAuthMode === 'forgot') {
         try {
           const response = await fetch('/api/v1/auth/forgot-password', {
@@ -681,7 +700,6 @@
         return;
       }
 
-      // 3. Native Student Database Connection Flows
       const endpoint = (currentAuthMode === 'login') ? '/api/v1/auth/login' : '/api/v1/auth/register';
       const payload = (currentAuthMode === 'login') ? { student_id, password } : { student_id, password, faculty_code };
 
@@ -742,7 +760,7 @@
       }
     }
 
-    // Dynamic Render Architecture for Candidate Profiles (Fixed name display)
+    // Dynamic Render Architecture for Candidate Profiles (TABLE FORMAT)
     async function loadCandidatesBallotMatrix(electionId) {
       try {
         const response = await fetch(`/api/v1/elections/${electionId}/candidates`, {
@@ -755,28 +773,66 @@
           return;
         }
 
-        candidatesContainer.innerHTML = ''; 
+        // Generate full-width semantic table markup matching the reference image layout
+        candidatesContainer.innerHTML = `
+          <div class="ballot-table-wrapper">
+            <table class="ballot-table">
+              <thead>
+                <tr>
+                  <th style="width: 100px; text-align: center;">Picture</th>
+                  <th style="width: 200px;">Candidate No</th>
+                  <th>Candidate Details & Manifesto</th>
+                  <th style="width: 100px; text-align: center;">Vote</th>
+                </tr>
+              </thead>
+              <tbody id="ballot-table-body"></tbody>
+            </table>
+          </div>
+          <div class="btn-submit-vote-container">
+            <button id="global-submit-vote-btn" class="btn-submit-vote">Submit Vote</button>
+          </div>
+        `;
 
-        collection.forEach(cand => {
+        const tbody = document.getElementById('ballot-table-body');
+
+        collection.forEach((cand, index) => {
           const initials = cand.candidate_id ? cand.candidate_id.substring(0, 2).toUpperCase() : "CD";
+          const tr = document.createElement('tr');
           
-          const card = document.createElement('div');
-          card.className = 'candidate-card';
-          card.innerHTML = `
-            <div class="candidate-profile-row">
-              <div class="avatar-wrapper">
+          tr.innerHTML = `
+            <td style="text-align: center;">
+              <div class="avatar-wrapper" style="margin: 0 auto;">
                 ${cand.profile_picture ? `<img src="${cand.profile_picture}" alt="Profile">` : initials}
               </div>
-              <div class="cand-meta">
-                <h4>${cand.candidate_id}</h4>
-                <p>Faculty: ${cand.faculty_code || 'General'}</p>
+            </td>
+            <td style="font-weight: 600; color: var(--text-dark); font-size: 0.95rem;">
+              ${cand.candidate_id}
+            </td>
+            <td>
+              <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.2rem;">
+                Faculty Code Loop: ${cand.faculty_code || 'General'}
               </div>
-            </div>
-            <div class="manifesto-body">"${cand.manifesto || 'No manifesto provided by candidate.'}"</div>
-            <button class="btn-vote-action" onclick="commitSecureBallotElement('${cand.candidate_hash}')">🗳️ Cast Vote</button>
+              <div style="font-size: 0.9rem; color: #475569; font-style: italic;">
+                "${cand.manifesto || 'No manifesto provided by candidate.'}"
+              </div>
+            </td>
+            <td style="text-align: center;">
+              <input type="radio" name="candidate_selection" value="${cand.candidate_hash}" class="ballot-radio" ${index === 0 ? 'checked' : ''}>
+            </td>
           `;
-          candidatesContainer.appendChild(card);
+          tbody.appendChild(tr);
         });
+
+        // Event listener for centralized submission button execution
+        document.getElementById('global-submit-vote-btn').addEventListener('click', () => {
+          const selectedRadio = document.querySelector('input[name="candidate_selection"]:checked');
+          if (!selectedRadio) {
+            alert("Please make a selection choice before committing your ballot.");
+            return;
+          }
+          commitSecureBallotElement(selectedRadio.value);
+        });
+
       } catch (err) {
         candidatesContainer.innerHTML = `<div class="fallback-card">Exception occurred querying ledger channels.</div>`;
       }
@@ -890,7 +946,7 @@
           if (!response.ok) throw new Error(summary.error || 'Mutation payload rejected.');
 
           adminStatusMsg.className = "status-banner success";
-          adminStatusMsg.innerText = "Candidate profile picture updated successfully.";
+          adminStatusMsg.innerText = "Candidate profile base64 picture stream updated successfully.";
           adminStatusMsg.style.display = 'block';
           document.getElementById('admin-avatar-form').reset();
         } catch (err) {
